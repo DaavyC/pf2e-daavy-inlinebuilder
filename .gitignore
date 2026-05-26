@@ -1,5 +1,8 @@
-# Local agent instructions
+# Codex
 AGENTS.md
 
-# Test workspace
+# Foundry VTT
+pf2e-daavy-inlinebuilder.lock
+
+# Tests
 tests/
