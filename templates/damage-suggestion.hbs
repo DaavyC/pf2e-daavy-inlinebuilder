@@ -1,0 +1,56 @@
+<div class="inlinebuilder-content inlinebuilder-dmg-suggest">
+  {{#if showStep1}}
+  <fieldset class="template-section">
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>Type</label>
+        <span>Damage profile</span>
+      </div>
+      <div class="inlinebuilder-control icon-btn-group segmented text-segments">
+        <button type="button" class="icon-btn" data-action="selectType" data-type="area">
+          <i class="fas fa-burst"></i>
+          <span>Area</span>
+        </button>
+        <button type="button" class="icon-btn" data-action="selectType" data-type="strike">
+          <i class="fas fa-hand-fist"></i>
+          <span>Strike</span>
+        </button>
+      </div>
+    </div>
+  </fieldset>
+  {{/if}}
+
+  {{#if showStep2}}
+  <fieldset class="template-section">
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>Level</label>
+        <span>Creature level</span>
+      </div>
+      <div class="inlinebuilder-control dmg-level-row">
+        <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="-1">&minus;</button>
+        <span id="dmg-suggest-level" class="dmg-level-value">{{currentLevel}}</span>
+        <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="1">+</button>
+      </div>
+    </div>
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>Intensity</label>
+        <span>Damage category</span>
+      </div>
+      <div class="inlinebuilder-control icon-btn-group segmented text-segments">
+        {{#if isArea}}
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="unlimited">Unlimited</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="limited">Limited</button>
+        {{/if}}
+        {{#if isStrike}}
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="extreme">Extreme</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="high">High</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="moderate">Moderate</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="low">Low</button>
+        {{/if}}
+      </div>
+    </div>
+  </fieldset>
+  {{/if}}
+</div>

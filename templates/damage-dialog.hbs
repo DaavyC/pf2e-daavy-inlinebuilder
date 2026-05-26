@@ -1,0 +1,33 @@
+<div class="inlinebuilder-content">
+  <fieldset class="template-section">
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>Damage</label>
+        <span>Formula only</span>
+      </div>
+      <div class="inlinebuilder-control">
+        <input type="text" name="damage" placeholder="1d6">
+      </div>
+    </div>
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>Type</label>
+        <span>Damage type</span>
+      </div>
+      <div class="inlinebuilder-control">
+        <select name="type-suggest">
+          <option value="">-- Select --</option>
+          {{#each damageTypes}}
+          <option value="{{this}}">{{this}}</option>
+          {{/each}}
+        </select>
+      </div>
+    </div>
+  </fieldset>
+  <div class="actions-footer">
+    <button type="button" class="insert-all-btn" data-action="add">
+      <i class="fas fa-plus"></i>
+      <span>Add</span>
+    </button>
+  </div>
+</div>

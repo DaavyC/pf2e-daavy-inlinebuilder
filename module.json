@@ -1,0 +1,69 @@
+{
+  "id": "pf2e-daavy-inlinebuilder",
+  "title": "PF2e Daavy's Inline Builder",
+  "description": "<p>Adds a button to create Area, Damage, and Saving Throw templates in the description editor.</p>",
+  "version": "1.0",
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14",
+    "maximum": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "pf2e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "8.1.2",
+          "verified": "8.1.2"
+        }
+      }
+    ],
+    "requires": [
+      {
+        "id": "pf2e-toolbelt",
+        "type": "module",
+        "compatibility": {}
+      }
+    ]
+  },
+  "authors": [
+    {
+      "name": "Daavy",
+      "email": "Daavyc@gmail.com",
+      "discord": "daavy",
+      "flags": {}
+    }
+  ],
+  "esmodules": [
+    "scripts/main.js",
+    "scripts/js/automation.js"
+  ],
+  "styles": [
+    {
+      "src": "styles/base.css"
+    },
+    {
+      "src": "styles/main-dialog.css"
+    },
+    {
+      "src": "styles/editor-button.css"
+    },
+    {
+      "src": "styles/suggestion-dialogs.css"
+    },
+    {
+      "src": "styles/condition-picker.css"
+    },
+    {
+      "src": "styles/comfort-edit.css"
+    },
+    {
+      "src": "styles/responsive.css"
+    }
+  ],
+  "url": "https://github.com/DaavyC/pf2e-daavy-inlinebuilder",
+  "manifest": "https://github.com/DaavyC/pf2e-daavy-inlinebuilder/raw/main/module.json",
+  "download": "https://github.com/DaavyC/pf2e-daavy-inlinebuilder/archive/refs/heads/main.zip",
+  "flags": {}
+}

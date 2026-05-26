@@ -1,0 +1,26 @@
+<div class="inlinebuilder-content inlinebuilder-dmg-suggest">
+  <fieldset class="template-section">
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>Level</label>
+        <span>Creature level</span>
+      </div>
+      <div class="inlinebuilder-control dmg-level-row">
+        <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="-1">&minus;</button>
+        <span id="dc-suggest-level" class="dmg-level-value">{{currentLevel}}</span>
+        <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="1">+</button>
+      </div>
+    </div>
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>Intensity</label>
+        <span>DC category</span>
+      </div>
+      <div class="inlinebuilder-control icon-btn-group segmented text-segments">
+        {{#each intensities}}
+        <button type="button" class="icon-btn dc-btn" data-action="confirmDC" data-intensity="{{this}}">{{this}}</button>
+        {{/each}}
+      </div>
+    </div>
+  </fieldset>
+</div>
