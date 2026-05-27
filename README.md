@@ -4,6 +4,10 @@ A **Foundry VTT** module for **Pathfinder Second Edition** that helps build PF2e
 
 ---
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/C1I7209LY1)
+
+---
+
 ## 🗂️ Features
 
 - **📝 Editor Button** — Opens the builder from supported description editors.
