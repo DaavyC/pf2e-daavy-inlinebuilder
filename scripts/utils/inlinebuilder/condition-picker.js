@@ -1,5 +1,5 @@
 import { PF2E_CONDITIONS, PF2E_CONDITION_MAP, VALUED_CONDITION_SET } from '../../data/tables.js';
-import { MODULE_ID } from '../constants.js';
+import { MODULE_ID, localize } from '../constants.js';
 import { clampConditionValue, getInputValue, setInputValue } from './dom-helpers.js';
 import { parseConditionTags, removeConditionTag, upsertConditionTag } from './condition-tags.js';
 import { openDamageDialog } from './damage-dialog.js';
@@ -17,7 +17,7 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
     classes: ['inlinebuilder', 'pf2e-daavy-inlinebuilder-picker-dialog'],
     tag: 'div',
     window: {
-      title: 'Select Condition',
+      title: localize('window.selectCondition', 'Select Condition'),
       icon: 'fas fa-list-check'
     },
     position: { width: 480 },
@@ -48,20 +48,20 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
         const value = this.currentConditions.get(slug) ?? 1;
 
         let actionClass = '';
-        let actionTitle = 'Click to add condition';
+        let actionTitle = localize('tooltips.clickAddCondition', 'Click to add condition');
         let iconClass = '';
         let iconPath = `systems/pf2e/icons/conditions/${slug}.webp`;
         let label = CONDITION_LABEL_BY_SLUG.get(slug) ?? slug;
 
         if (slug === 'persistent-damage') {
           actionClass = 'add-action';
-          actionTitle = 'Click to add persistent damage';
+          actionTitle = localize('tooltips.clickAddPersistentDamage', 'Click to add persistent damage');
         } else if (slug === 'damage') {
           actionClass = 'add-action';
-          actionTitle = 'Click to add damage';
+          actionTitle = localize('tooltips.clickAddDamage', 'Click to add damage');
           iconClass = 'fas fa-bolt';
           iconPath = '';
-          label = 'Damage';
+          label = localize('labels.damage', 'Damage');
         }
 
         return {

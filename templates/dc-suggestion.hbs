@@ -2,8 +2,8 @@
   <fieldset class="template-section">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Level</label>
-        <span>Creature level</span>
+        <label>{{labels.level}}</label>
+        <span>{{labels.creatureLevel}}</span>
       </div>
       <div class="inlinebuilder-control dmg-level-row">
         <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="-1">&minus;</button>
@@ -13,12 +13,12 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Intensity</label>
-        <span>DC category</span>
+        <label>{{labels.intensity}}</label>
+        <span>{{labels.dcCategory}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented text-segments">
         {{#each intensities}}
-        <button type="button" class="icon-btn dc-btn" data-action="confirmDC" data-intensity="{{this}}">{{this}}</button>
+        <button type="button" class="icon-btn dc-btn" data-action="confirmDC" data-intensity="{{value}}">{{label}}</button>
         {{/each}}
       </div>
     </div>

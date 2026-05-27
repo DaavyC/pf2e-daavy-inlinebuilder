@@ -1,4 +1,4 @@
-import { MODULE_ID } from '../constants.js';
+import { MODULE_ID, localize } from '../constants.js';
 import { getInputValue } from './dom-helpers.js';
 import { showConditionPicker } from './condition-picker.js';
 
@@ -11,7 +11,7 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     classes: ['inlinebuilder', 'pf2e-daavy-inlinebuilder-comfort-dialog'],
     tag: 'div',
     window: {
-      title: 'Text Editor',
+      title: localize('window.textEditor', 'Text Editor'),
       icon: 'fas fa-edit'
     },
     position: { width: 520 },
@@ -35,7 +35,11 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   // Prepares template data.
   async _prepareContext(_options) {
     return {
-      content: this.initialValue
+      content: this.initialValue,
+      labels: {
+        addCondition: localize('tooltips.addCondition', 'Add Condition'),
+        save: localize('labels.saveAction', 'Save')
+      }
     };
   }
 

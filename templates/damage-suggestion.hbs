@@ -3,17 +3,17 @@
   <fieldset class="template-section">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Type</label>
-        <span>Damage profile</span>
+        <label>{{labels.type}}</label>
+        <span>{{labels.damageProfile}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented text-segments">
         <button type="button" class="icon-btn" data-action="selectType" data-type="area">
           <i class="fas fa-burst"></i>
-          <span>Area</span>
+          <span>{{labels.area}}</span>
         </button>
         <button type="button" class="icon-btn" data-action="selectType" data-type="strike">
           <i class="fas fa-hand-fist"></i>
-          <span>Strike</span>
+          <span>{{labels.strike}}</span>
         </button>
       </div>
     </div>
@@ -24,8 +24,8 @@
   <fieldset class="template-section">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Level</label>
-        <span>Creature level</span>
+        <label>{{labels.level}}</label>
+        <span>{{labels.creatureLevel}}</span>
       </div>
       <div class="inlinebuilder-control dmg-level-row">
         <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="-1">&minus;</button>
@@ -35,19 +35,19 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Intensity</label>
-        <span>Damage category</span>
+        <label>{{labels.intensity}}</label>
+        <span>{{labels.damageCategory}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented text-segments">
         {{#if isArea}}
-        <button type="button" class="icon-btn" data-action="selectSub" data-sub="unlimited">Unlimited</button>
-        <button type="button" class="icon-btn" data-action="selectSub" data-sub="limited">Limited</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="unlimited">{{labels.unlimited}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="limited">{{labels.limited}}</button>
         {{/if}}
         {{#if isStrike}}
-        <button type="button" class="icon-btn" data-action="selectSub" data-sub="extreme">Extreme</button>
-        <button type="button" class="icon-btn" data-action="selectSub" data-sub="high">High</button>
-        <button type="button" class="icon-btn" data-action="selectSub" data-sub="moderate">Moderate</button>
-        <button type="button" class="icon-btn" data-action="selectSub" data-sub="low">Low</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="extreme">{{labels.extreme}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="high">{{labels.high}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="moderate">{{labels.moderate}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="low">{{labels.low}}</button>
         {{/if}}
       </div>
     </div>

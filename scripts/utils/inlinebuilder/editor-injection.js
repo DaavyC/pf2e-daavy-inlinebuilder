@@ -1,5 +1,6 @@
 import { getHookElement } from './dom-helpers.js';
 import { openInlineBuilderDialog } from './inline-builder-dialog.js';
+import { localize } from '../constants.js';
 
 let editorInjectionFrame = null;
 const pendingEditorInjectionRoots = new Set();
@@ -47,7 +48,7 @@ function injectInlineBuilderEditorButton(container) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'inlinebuilder-editor-btn';
-    btn.setAttribute('data-tooltip', 'Inline Builder');
+    btn.setAttribute('data-tooltip', localize('window.inlineBuilder', 'Inline Builder'));
     btn.innerHTML = '<i class="fa-solid fa-wand-sparkles fa-fw"></i>';
 
     btn.addEventListener('click', function (e) {

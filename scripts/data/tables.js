@@ -53,27 +53,27 @@ export const DC_TABLE = {
 
 export const TEMPLATE_CONFIG = {
     types: [
-        { value: 'burst', icon: 'fa-circle', tooltip: 'Burst' },
-        { value: 'cone', icon: 'fa-angle-left', tooltip: 'Cone' },
-        { value: 'square', icon: 'fa-square', tooltip: 'Square' },
-        { value: 'line', icon: 'fa-grip-lines', tooltip: 'Line' }
+        { value: 'burst', icon: 'fa-circle', tooltipKey: 'templateTypes.burst' },
+        { value: 'cone', icon: 'fa-angle-left', tooltipKey: 'templateTypes.cone' },
+        { value: 'square', icon: 'fa-square', tooltipKey: 'templateTypes.square' },
+        { value: 'line', icon: 'fa-grip-lines', tooltipKey: 'templateTypes.line' }
     ],
     damageTypes: ['fire', 'cold', 'electricity', 'acid', 'sonic', 'force', 'mental', 'poison', 'bleed', 'spirit', 'vitality', 'void', 'bludgeoning', 'piercing', 'slashing'],
     saveTypes: [
-        { value: 'fortitude', icon: 'fa-chess-rook', tooltip: 'Fortitude' },
-        { value: 'reflex', icon: 'fa-person-running', tooltip: 'Reflex' },
-        { value: 'will', icon: 'fa-brain', tooltip: 'Will' }
+        { value: 'fortitude', icon: 'fa-chess-rook', tooltipKey: 'saveTypes.fortitude' },
+        { value: 'reflex', icon: 'fa-person-running', tooltipKey: 'saveTypes.reflex' },
+        { value: 'will', icon: 'fa-brain', tooltipKey: 'saveTypes.will' }
     ],
     showDCOptions: [
-        { value: 'all', icon: 'fa-users', tooltip: 'All' },
-        { value: 'owner', icon: 'fa-user', tooltip: 'Owner' },
-        { value: 'gm', icon: 'fa-crown', tooltip: 'GM' },
-        { value: 'none', icon: 'fa-eye-slash', tooltip: 'None' }
+        { value: 'all', icon: 'fa-users', tooltipKey: 'showDCOptions.all' },
+        { value: 'owner', icon: 'fa-user', tooltipKey: 'showDCOptions.owner' },
+        { value: 'gm', icon: 'fa-crown', tooltipKey: 'showDCOptions.gm' },
+        { value: 'none', icon: 'fa-eye-slash', tooltipKey: 'showDCOptions.none' }
     ],
     traits: [
-        { value: 'area-damage', icon: 'fa-burst', tooltip: 'Area Damage' },
-        { value: 'splash', icon: 'fa-droplet', tooltip: 'Splash' },
-        { value: 'persistent', icon: 'fa-clock', tooltip: 'Persistent' }
+        { value: 'area-damage', icon: 'fa-burst', tooltipKey: 'traits.areaDamage' },
+        { value: 'splash', icon: 'fa-droplet', tooltipKey: 'traits.splash' },
+        { value: 'persistent', icon: 'fa-clock', tooltipKey: 'traits.persistent' }
     ]
 };
 

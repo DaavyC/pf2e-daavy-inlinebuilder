@@ -1,4 +1,4 @@
-import { MODULE_ID } from "./utils/constants.js";
+import { MODULE_ID, localize } from "./utils/constants.js";
 
 const DEBUG_SETTING = "debugAutomation";
 let readyLogRegistered = false;
@@ -17,8 +17,8 @@ function registerDebugSettings() {
     if (game.settings.settings.has(`${MODULE_ID}.${DEBUG_SETTING}`)) return;
 
     game.settings.register(MODULE_ID, DEBUG_SETTING, {
-        name: "Debug",
-        hint: "Don't enable this unless you know what you're doing.",
+        name: localize("settings.debugAutomation.name", "Debug"),
+        hint: localize("settings.debugAutomation.hint", "Don't enable this unless you know what you're doing."),
         scope: "world",
         config: true,
         type: Boolean,

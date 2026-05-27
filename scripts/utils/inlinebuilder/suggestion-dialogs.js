@@ -1,11 +1,36 @@
 import { DAMAGE_TABLES, DC_TABLE } from '../../data/tables.js';
-import { MODULE_ID } from '../constants.js';
+import { MODULE_ID, localize } from '../constants.js';
 import { clampNumber, parseInteger } from './dom-helpers.js';
 import { getCreatureLevelFromSheet } from './state.js';
 
 const DMG_SUGGEST_LEVEL_MIN = -1;
 const DMG_SUGGEST_LEVEL_MAX = 24;
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+function getSuggestionLabels() {
+  return {
+    level: localize('labels.level', 'Level'),
+    creatureLevel: localize('labels.creatureLevel', 'Creature level'),
+    intensity: localize('labels.intensity', 'Intensity'),
+    dcCategory: localize('labels.dcCategory', 'DC category'),
+    type: localize('labels.type', 'Type'),
+    damageProfile: localize('labels.damageProfile', 'Damage profile'),
+    area: localize('labels.area', 'Area'),
+    strike: localize('labels.strike', 'Strike'),
+    damageCategory: localize('labels.damageCategory', 'Damage category'),
+    unlimited: localize('labels.unlimited', 'Unlimited'),
+    limited: localize('labels.limited', 'Limited'),
+    extreme: localize('labels.extreme', 'Extreme'),
+    high: localize('labels.high', 'High'),
+    moderate: localize('labels.moderate', 'Moderate'),
+    low: localize('labels.low', 'Low')
+  };
+}
+
+function getIntensityOptions(values) {
+  const labels = getSuggestionLabels();
+  return values.map(value => ({ value, label: labels[value] ?? value }));
+}
 
 // Gets a value by level.
 function getLeveledTableValue(table, fallback) {
@@ -27,7 +52,7 @@ function getDefaultDC() {
 // Opens a level-based dialog.
 function renderNpcLevelDialog(DialogClass, mapResult = result => result) {
   if (getCreatureLevelFromSheet() === null) {
-    ui.notifications.warn('No open NPC sheet found.');
+    ui.notifications.warn(localize('warnings.noNpcSheet', 'No open NPC sheet found.'));
     return Promise.resolve(null);
   }
 
@@ -52,7 +77,7 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     id: 'inlinebuilder-dc-suggestion',
     classes: ['inlinebuilder'],
     window: {
-      title: 'DC Suggestion',
+      title: localize('window.dcSuggestion', 'DC Suggestion'),
       icon: 'fas fa-shield-alt'
     },
     position: { width: 320 },
@@ -79,7 +104,8 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     return {
       baseLevel: getCreatureLevelFromSheet() ?? 0,
       currentLevel: this.currentLevel,
-      intensities: ['extreme', 'high', 'moderate']
+      labels: getSuggestionLabels(),
+      intensities: getIntensityOptions(['extreme', 'high', 'moderate'])
     };
   }
 
@@ -97,7 +123,7 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     const dc = table[level] ?? table[String(level)];
 
     if (!dc) {
-      ui.notifications.warn('DC not found for this level.');
+      ui.notifications.warn(localize('warnings.dcNotFound', 'DC not found for this level.'));
       return;
     }
 
@@ -113,7 +139,7 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     classes: ['inlinebuilder'],
     tag: 'div',
     window: {
-      title: 'Damage Suggestion',
+      title: localize('window.damageSuggestion', 'Damage Suggestion'),
       icon: 'fas fa-dragon'
     },
     position: { width: 320 },
@@ -149,7 +175,8 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
       showStep1: this.currentStep === 1,
       showStep2: this.currentStep === 2,
       isArea: this.selectedType === 'area',
-      isStrike: this.selectedType === 'strike'
+      isStrike: this.selectedType === 'strike',
+      labels: getSuggestionLabels()
     };
   }
 
@@ -182,19 +209,19 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
   // Confirms the suggested damage.
   static async confirmDamage(_event, _target) {
     if (!this.selectedType || !this.selectedSub) {
-      ui.notifications.warn('Please select a damage type and intensity.');
+      ui.notifications.warn(localize('warnings.damageTypeIntensityRequired', 'Please select a damage type and intensity.'));
       return;
     }
 
     const table = DAMAGE_TABLES[this.selectedType]?.[this.selectedSub];
     if (!table) {
-      ui.notifications.warn('Damage table not found.');
+      ui.notifications.warn(localize('warnings.damageTableNotFound', 'Damage table not found.'));
       return;
     }
 
     const formula = table[this.currentLevel] || table[String(this.currentLevel)];
     if (!formula) {
-      ui.notifications.warn('Formula not found for this level.');
+      ui.notifications.warn(localize('warnings.formulaNotFound', 'Formula not found for this level.'));
       return;
     }
 

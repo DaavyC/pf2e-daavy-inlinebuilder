@@ -1,4 +1,5 @@
 import { parseInteger } from './dom-helpers.js';
+import { localize } from '../constants.js';
 
 // Generates the template line.
 function generateTemplateString(type, distance) {
@@ -25,12 +26,16 @@ function parseDescriptionBlock(text) {
   const out = { template: null, check: null, damage: null };
   if (!text) return out;
 
-  const templateMatch = text.match(/Template:\s*@Template\[type:(\w+)\|distance:(\d+)\]/i);
+  const templateLabel = escapeRegExp(localize('description.template', 'Template:'));
+  const savingThrowLabel = escapeRegExp(localize('description.savingThrow', 'Saving Throw:'));
+  const damageLabel = escapeRegExp(localize('description.damage', 'Damage:'));
+
+  const templateMatch = text.match(new RegExp(`(?:Template:|${templateLabel})\\s*@Template\\[type:(\\w+)\\|distance:(\\d+)\\]`, 'i'));
   if (templateMatch) {
     out.template = { type: templateMatch[1], distance: parseInteger(templateMatch[2]) };
   }
 
-  const checkMatch = text.match(/Saving Throw:\s*@Check\[type:(\w+)\|dc:(\d+)(?:\|basic:(true|false))?\|showDC:(\w+)\]/i);
+  const checkMatch = text.match(new RegExp(`(?:Saving Throw:|${savingThrowLabel})\\s*@Check\\[type:(\\w+)\\|dc:(\\d+)(?:\\|basic:(true|false))?\\|showDC:(\\w+)\\]`, 'i'));
   if (checkMatch) {
     out.check = {
       saveType: checkMatch[1],
@@ -40,7 +45,7 @@ function parseDescriptionBlock(text) {
     };
   }
 
-  const damageMatch = text.match(/Damage:\s*@Damage\[([^[]+)\[(\w+)\](?:\|traits:([^\]]*))?\]/i);
+  const damageMatch = text.match(new RegExp(`(?:Damage:|${damageLabel})\\s*@Damage\\[([^[]+)\\[(\\w+)\\](?:\\|traits:([^\\]]*))?\\]`, 'i'));
   if (out.check?.basic === true && damageMatch) {
     const traits = damageMatch[3]
       ? damageMatch[3].split(',').map(trait => trait.trim()).filter(Boolean)
@@ -49,6 +54,10 @@ function parseDescriptionBlock(text) {
   }
 
   return out;
+}
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export {

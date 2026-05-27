@@ -1,28 +1,28 @@
 <div class="inlinebuilder-content inlinebuilder-main">
-  <div class="inlinebuilder-toggles" aria-label="Inline Builder sections">
-    <button type="button" class="inlinebuilder-toggle active" data-section="template" data-tooltip="Area Template">
+  <div class="inlinebuilder-toggles" aria-label="{{labels.sectionsAria}}">
+    <button type="button" class="inlinebuilder-toggle active" data-section="template" data-tooltip="{{labels.areaTemplate}}">
       <i class="fas fa-bullseye"></i>
-      <span>Area Template</span>
+      <span>{{labels.areaTemplate}}</span>
     </button>
-    <button type="button" class="inlinebuilder-toggle" data-section="damage" data-tooltip="Damage">
+    <button type="button" class="inlinebuilder-toggle" data-section="damage" data-tooltip="{{labels.damage}}">
       <i class="fas fa-fire"></i>
-      <span>Damage</span>
+      <span>{{labels.damage}}</span>
     </button>
-    <button type="button" class="inlinebuilder-toggle" data-section="check" data-tooltip="Saving Throw">
+    <button type="button" class="inlinebuilder-toggle" data-section="check" data-tooltip="{{labels.savingThrow}}">
       <i class="fas fa-shield-alt"></i>
-      <span>Saving Throw</span>
+      <span>{{labels.savingThrow}}</span>
     </button>
-    <button type="button" class="inlinebuilder-toggle" data-section="automation" data-tooltip="Automations">
+    <button type="button" class="inlinebuilder-toggle" data-section="automation" data-tooltip="{{labels.automations}}">
       <i class="fas fa-list-check"></i>
-      <span>Automations</span>
+      <span>{{labels.automations}}</span>
     </button>
   </div>
 
   <fieldset class="template-section" data-section="template">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Template Type</label>
-        <span>Area shape</span>
+        <label>{{labels.templateType}}</label>
+        <span>{{labels.areaShape}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{#each templateTypes}}
@@ -34,18 +34,18 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Distance</label>
-        <span>Range in units</span>
+        <label>{{labels.distance}}</label>
+        <span>{{labels.rangeInUnits}}</span>
       </div>
       <div class="inlinebuilder-control input-with-controls">
         <input type="number" id="template-distance" name="templateDistance" min="0" step="5" placeholder="ft" value="0">
-        <button type="button" id="distance-decrease" class="distance-btn" data-tooltip="Decrease (-5, Shift: -10)">
+        <button type="button" id="distance-decrease" class="distance-btn" data-tooltip="{{labels.decreaseDistance}}">
           <i class="fas fa-minus"></i>
         </button>
-        <button type="button" id="distance-increase" class="distance-btn" data-tooltip="Increase (+5, Shift: +10)">
+        <button type="button" id="distance-increase" class="distance-btn" data-tooltip="{{labels.increaseDistance}}">
           <i class="fas fa-plus"></i>
         </button>
-        <button type="button" id="distance-reset" class="distance-btn" data-tooltip="Reset (0)">
+        <button type="button" id="distance-reset" class="distance-btn" data-tooltip="{{labels.resetDistance}}">
           <i class="fas fa-undo"></i>
         </button>
       </div>
@@ -55,24 +55,24 @@
   <fieldset class="template-section" data-section="damage" style="display:none;">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Formula</label>
-        <span>Damage expression</span>
+        <label>{{labels.formula}}</label>
+        <span>{{labels.damageExpression}}</span>
       </div>
       <div class="inlinebuilder-control input-with-suggest">
         <input type="text" id="damage-formula" name="damageFormula" placeholder="{{defaultDamage}}">
-        <button type="button" id="suggest-damage-btn" class="suggest-btn" data-tooltip="Suggest based on level">
+        <button type="button" id="suggest-damage-btn" class="suggest-btn" data-tooltip="{{labels.suggestBasedOnLevel}}">
           <i class="fas fa-dragon"></i>
         </button>
       </div>
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Damage Type</label>
-        <span>Select a type</span>
+        <label>{{labels.damageType}}</label>
+        <span>{{labels.selectType}}</span>
       </div>
       <div class="inlinebuilder-control">
         <select id="damage-type" name="damageType">
-          <option value="">-- Select --</option>
+          <option value="">{{labels.selectPlaceholder}}</option>
           {{#each damageTypes}}
           <option value="{{this}}">{{this}}</option>
           {{/each}}
@@ -81,8 +81,8 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Traits</label>
-        <span>Characteristics</span>
+        <label>{{labels.traits}}</label>
+        <span>{{labels.characteristics}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{#each traits}}
@@ -97,8 +97,8 @@
   <fieldset class="template-section" data-section="check" style="display:none;">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Save</label>
-        <span>Check type</span>
+        <label>{{labels.save}}</label>
+        <span>{{labels.checkType}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{#each saveTypes}}
@@ -110,32 +110,32 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>DC</label>
-        <span>Difficulty class</span>
+        <label>{{labels.dc}}</label>
+        <span>{{labels.difficultyClass}}</span>
       </div>
       <div class="inlinebuilder-control input-with-suggest">
         <input type="number" id="dc-value" name="dcValue" min="1" max="60" placeholder="{{defaultDC}}">
-        <button type="button" id="suggest-dc-btn" class="suggest-btn" data-tooltip="Suggest based on level">
+        <button type="button" id="suggest-dc-btn" class="suggest-btn" data-tooltip="{{labels.suggestBasedOnLevel}}">
           <i class="fas fa-dragon"></i>
         </button>
       </div>
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Basic</label>
-        <span>Standard save</span>
+        <label>{{labels.basic}}</label>
+        <span>{{labels.standardSave}}</span>
       </div>
       <div class="inlinebuilder-control inlinebuilder-check-control">
         <input type="checkbox" id="basic-save" name="basicSave" checked>
-        <label for="basic-save" class="inlinebuilder-checkbox inlinebuilder-basic-toggle" data-tooltip="Basic save">
+        <label for="basic-save" class="inlinebuilder-checkbox inlinebuilder-basic-toggle" data-tooltip="{{labels.basicSave}}">
           <i class="fas fa-shield-alt"></i>
         </label>
       </div>
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Show As</label>
-        <span>Chat visibility</span>
+        <label>{{labels.showAs}}</label>
+        <span>{{labels.chatVisibility}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{#each showDCOptions}}
@@ -155,10 +155,10 @@
       </div>
       <div class="inlinebuilder-control input-with-suggest">
         <input type="text" id="{{inputId}}" name="{{name}}">
-        <button type="button" class="add-condition suggest-btn" data-target="#{{inputId}}" title="Add Condition">
+        <button type="button" class="add-condition suggest-btn" data-target="#{{inputId}}" title="{{../labels.addCondition}}">
           <i class="fas fa-plus"></i>
         </button>
-        <button type="button" class="comfort-edit suggest-btn" data-target="#{{inputId}}" title="Text Editor">
+        <button type="button" class="comfort-edit suggest-btn" data-target="#{{inputId}}" title="{{../labels.textEditor}}">
           <i class="fas fa-edit"></i>
         </button>
       </div>
@@ -169,7 +169,7 @@
   <div class="actions-footer">
     <button type="button" class="insert-all-btn" data-action="insertAll">
       <i class="fas fa-check"></i>
-      <span>Apply</span>
+      <span>{{labels.apply}}</span>
     </button>
   </div>
 </div>

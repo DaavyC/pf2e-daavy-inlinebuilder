@@ -2,7 +2,7 @@ import {
   openInlineBuilderDialog,
   registerInlineBuilderHooks,
   registerInlineBuilderKeybinding
-} from './js/utils/inlinebuilder/index.js';
+} from './scripts/utils/inlinebuilder/index.js';
 
 // Exposes the global builder opener.
 window.openInlineBuilder = openInlineBuilderDialog;

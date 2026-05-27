@@ -1,10 +1,12 @@
 import { convertAutomationHtmlToShortText, convertAutomationText } from '../text-helpers.js';
-import { AUTOMATION_FIELDS, AUTOMATION_RESULT_BY_LABEL } from './automation-fields.js';
+import { localize } from '../constants.js';
+import { getAutomationFields, getAutomationResultByLabel } from './automation-fields.js';
 import { automationLinesToParagraphHtml, getEditorEditable } from './dom-helpers.js';
 
 // Detects existing automations.
 function detectExistingAutomations(editorRef) {
   const result = { sc: '', s: '', f: '', fc: '' };
+  const automationResultByLabel = getAutomationResultByLabel();
   const editable = getEditorEditable(editorRef);
   if (!editable) return result;
   const html = editable.innerHTML || '';
@@ -23,7 +25,7 @@ function detectExistingAutomations(editorRef) {
     const label = strong.innerText.trim();
     let content = p.innerHTML.replace(strong.outerHTML, '').trim();
     content = convertAutomationHtmlToShortText(content.replace(/^[:\s]+/, ''));
-    const resultKey = AUTOMATION_RESULT_BY_LABEL.get(label);
+    const resultKey = automationResultByLabel.get(label);
     if (resultKey) result[resultKey] = content;
   });
   return result;
@@ -40,10 +42,10 @@ function applyAutomationToEditorContent(editorRef, applyText, silent = false) {
     if (matches.length > 0) {
       const lastMatch = matches[matches.length - 1];
       const content = raw.substring(lastMatch.index + lastMatch[0].length).trim();
-      if (AUTOMATION_FIELDS.some(([, label]) => content.includes(label)) || matches.length > 1) {
+      if (getAutomationFields().some(([, label]) => content.includes(label)) || matches.length > 1) {
         editable.innerHTML = raw.substring(0, lastMatch.index).trim();
         editable.dispatchEvent(new Event('input', { bubbles: true }));
-        if (!silent) ui.notifications.info('Automation cleared!');
+        if (!silent) ui.notifications.info(localize('notifications.automationCleared', 'Automation cleared!'));
         return true;
       }
     }
@@ -53,7 +55,7 @@ function applyAutomationToEditorContent(editorRef, applyText, silent = false) {
   newContent += automationLinesToParagraphHtml(applyText, convertAutomationText);
   editable.innerHTML = newContent;
   editable.dispatchEvent(new Event('input', { bubbles: true }));
-  if (!silent) ui.notifications.info('Automation text updated in description!');
+  if (!silent) ui.notifications.info(localize('notifications.automationUpdated', 'Automation text updated in description!'));
   return true;
 }
 

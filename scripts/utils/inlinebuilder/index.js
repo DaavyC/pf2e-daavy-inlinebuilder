@@ -1,4 +1,4 @@
-import { MODULE_ID } from '../constants.js';
+import { MODULE_ID, localize } from '../constants.js';
 import { queueInlineBuilderEditorInjection } from './editor-injection.js';
 import { openInlineBuilderDialog } from './inline-builder-dialog.js';
 import { setCurrentNpcActor } from './state.js';
@@ -42,8 +42,8 @@ function registerInlineBuilderHooks() {
 // Registers the Inline Builder shortcut.
 function registerInlineBuilderKeybinding() {
   game.keybindings.register(MODULE_ID, 'openDialog', {
-    name: 'Open Inline Builder',
-    hint: 'Opens the Inline Builder window',
+    name: localize('keybindings.openDialog.name', 'Open Inline Builder'),
+    hint: localize('keybindings.openDialog.hint', 'Opens the Inline Builder window'),
     editable: [{ key: 'KeyT', modifiers: ['Control', 'Shift'] }],
     onDown: () => {
       openInlineBuilderDialog();

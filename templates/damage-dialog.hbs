@@ -2,8 +2,8 @@
   <fieldset class="template-section">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Damage</label>
-        <span>Formula only</span>
+        <label>{{labels.damage}}</label>
+        <span>{{labels.formulaOnly}}</span>
       </div>
       <div class="inlinebuilder-control">
         <input type="text" name="damage" placeholder="1d6">
@@ -11,12 +11,12 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>Type</label>
-        <span>Damage type</span>
+        <label>{{labels.type}}</label>
+        <span>{{labels.damageType}}</span>
       </div>
       <div class="inlinebuilder-control">
         <select name="type-suggest">
-          <option value="">-- Select --</option>
+          <option value="">{{labels.selectPlaceholder}}</option>
           {{#each damageTypes}}
           <option value="{{this}}">{{this}}</option>
           {{/each}}
@@ -27,7 +27,7 @@
   <div class="actions-footer">
     <button type="button" class="insert-all-btn" data-action="add">
       <i class="fas fa-plus"></i>
-      <span>Add</span>
+      <span>{{labels.add}}</span>
     </button>
   </div>
 </div>

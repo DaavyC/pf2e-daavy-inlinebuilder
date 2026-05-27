@@ -1,7 +1,7 @@
 import { TEMPLATE_CONFIG } from '../../data/tables.js';
-import { MODULE_ID } from '../constants.js';
+import { MODULE_ID, localize } from '../constants.js';
 import { applyAutomationToEditorContent, detectExistingAutomations } from './automation-editor.js';
-import { AUTOMATION_FIELDS, AUTOMATION_TEMPLATE_FIELDS } from './automation-fields.js';
+import { getAutomationFields, getAutomationTemplateFields } from './automation-fields.js';
 import {
   automationLinesToParagraphHtml,
   findFirstEditorDivider,
@@ -28,6 +28,48 @@ import {
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
+function localizeOption(option) {
+  const fallback = option.tooltip ?? option.value;
+  return { ...option, tooltip: option.tooltipKey ? localize(option.tooltipKey, fallback) : fallback };
+}
+
+function getInlineBuilderLabels() {
+  return {
+    sectionsAria: localize('labels.sectionsAria', 'Inline Builder sections'),
+    areaTemplate: localize('labels.areaTemplate', 'Area Template'),
+    damage: localize('labels.damage', 'Damage'),
+    savingThrow: localize('labels.savingThrow', 'Saving Throw'),
+    automations: localize('labels.automations', 'Automations'),
+    templateType: localize('labels.templateType', 'Template Type'),
+    areaShape: localize('labels.areaShape', 'Area shape'),
+    distance: localize('labels.distance', 'Distance'),
+    rangeInUnits: localize('labels.rangeInUnits', 'Range in units'),
+    decreaseDistance: localize('tooltips.decreaseDistance', 'Decrease (-5, Shift: -10)'),
+    increaseDistance: localize('tooltips.increaseDistance', 'Increase (+5, Shift: +10)'),
+    resetDistance: localize('tooltips.resetDistance', 'Reset (0)'),
+    formula: localize('labels.formula', 'Formula'),
+    damageExpression: localize('labels.damageExpression', 'Damage expression'),
+    suggestBasedOnLevel: localize('tooltips.suggestBasedOnLevel', 'Suggest based on level'),
+    damageType: localize('labels.damageType', 'Damage Type'),
+    selectType: localize('labels.selectType', 'Select a type'),
+    selectPlaceholder: localize('labels.selectPlaceholder', '-- Select --'),
+    traits: localize('labels.traits', 'Traits'),
+    characteristics: localize('labels.characteristics', 'Characteristics'),
+    save: localize('labels.save', 'Save'),
+    checkType: localize('labels.checkType', 'Check type'),
+    dc: localize('labels.dc', 'DC'),
+    difficultyClass: localize('labels.difficultyClass', 'Difficulty class'),
+    basic: localize('labels.basic', 'Basic'),
+    standardSave: localize('labels.standardSave', 'Standard save'),
+    basicSave: localize('tooltips.basicSave', 'Basic save'),
+    showAs: localize('labels.showAs', 'Show As'),
+    chatVisibility: localize('labels.chatVisibility', 'Chat visibility'),
+    addCondition: localize('tooltips.addCondition', 'Add Condition'),
+    textEditor: localize('tooltips.textEditor', 'Text Editor'),
+    apply: localize('labels.apply', 'Apply')
+  };
+}
+
 // Main Inline Builder dialog.
 class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
@@ -35,7 +77,7 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     classes: ['inlinebuilder'],
     tag: 'div',
     window: {
-      title: 'Inline Builder',
+      title: localize('window.inlineBuilder', 'Inline Builder'),
       icon: 'fas fa-pen',
       resizable: false,
       minimizable: true
@@ -69,12 +111,13 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   // Prepares template data.
   async _prepareContext(_options) {
     return {
-      templateTypes: TEMPLATE_CONFIG.types,
+      labels: getInlineBuilderLabels(),
+      templateTypes: TEMPLATE_CONFIG.types.map(localizeOption),
       damageTypes: TEMPLATE_CONFIG.damageTypes,
-      saveTypes: TEMPLATE_CONFIG.saveTypes,
-      showDCOptions: TEMPLATE_CONFIG.showDCOptions,
-      traits: TEMPLATE_CONFIG.traits,
-      automationFields: AUTOMATION_TEMPLATE_FIELDS,
+      saveTypes: TEMPLATE_CONFIG.saveTypes.map(localizeOption),
+      showDCOptions: TEMPLATE_CONFIG.showDCOptions.map(localizeOption),
+      traits: TEMPLATE_CONFIG.traits.map(localizeOption),
+      automationFields: getAutomationTemplateFields(),
       defaultDamage: getDefaultDamageFormula(),
       defaultDC: getDefaultDC()
     };
@@ -269,10 +312,10 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     const existingAutomation = detectExistingAutomations(this.editorRef);
-    for (const [key, , selector] of AUTOMATION_FIELDS) {
+    for (const [key, , selector] of getAutomationFields()) {
       if (existingAutomation[key]) this._setInput(selector, existingAutomation[key]);
     }
-    if (AUTOMATION_FIELDS.some(([key]) => existingAutomation[key])) {
+    if (getAutomationFields().some(([key]) => existingAutomation[key])) {
       this._showSection('automation');
     }
   }
@@ -319,15 +362,15 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       const distanceVal = form.querySelector('#template-distance')?.value;
       const distance = parseInteger(distanceVal, NaN);
       if (!type) {
-        ui.notifications.warn('Area Template: Please select a type (Burst, Cone, Square, or Line).');
+        ui.notifications.warn(localize('warnings.areaTypeRequired', 'Area Template: Please select a type (Burst, Cone, Square, or Line).'));
         return;
       }
       if (!Number.isFinite(distance) || distance <= 0) {
-        ui.notifications.warn('Area Template: Distance must be greater than 0.');
+        ui.notifications.warn(localize('warnings.areaDistanceRequired', 'Area Template: Distance must be greater than 0.'));
         return;
       }
       const str = generateTemplateString(type, distance);
-      if (str) lines.push('Template: ' + str);
+      if (str) lines.push(`${localize('description.template', 'Template:')} ${str}`);
     }
 
     if (app.activeSections.has('check')) {
@@ -338,15 +381,15 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       basicSaveEnabled = basic;
       const showDC = app.selectedShowDC;
       if (!saveType) {
-        ui.notifications.warn('Saving Throw: Please select a save (Fortitude, Reflex, or Will).');
+        ui.notifications.warn(localize('warnings.saveTypeRequired', 'Saving Throw: Please select a save (Fortitude, Reflex, or Will).'));
         return;
       }
       if (!Number.isFinite(dc) || dc <= 0) {
-        ui.notifications.warn('Saving Throw: DC value must be greater than 0.');
+        ui.notifications.warn(localize('warnings.dcRequired', 'Saving Throw: DC value must be greater than 0.'));
         return;
       }
       const str = generateCheckString(saveType, String(dc), basic, showDC);
-      if (str) lines.push('Saving Throw: ' + str);
+      if (str) lines.push(`${localize('description.savingThrow', 'Saving Throw:')} ${str}`);
     }
 
     if (app.activeSections.has('damage') && basicSaveEnabled) {
@@ -354,26 +397,26 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       const damageType = form.querySelector('#damage-type')?.value ?? '';
       const traits = Array.from(app.selectedTraits);
       if (!formula) {
-        ui.notifications.warn('Damage: A damage formula is required.');
+        ui.notifications.warn(localize('warnings.damageFormulaRequired', 'Damage: A damage formula is required.'));
         return;
       }
       if (!damageType) {
-        ui.notifications.warn('Damage: Please select a damage type (do not use "-- Select --").');
+        ui.notifications.warn(localize('warnings.damageTypeRequiredSelect', 'Damage: Please select a damage type (do not use "-- Select --").'));
         return;
       }
       const str = generateDamageString(formula, damageType, traits);
-      if (str) lines.push('Damage: ' + str);
+      if (str) lines.push(`${localize('description.damage', 'Damage:')} ${str}`);
     }
 
     if (app.activeSections.has('automation')) {
-      for (const [, label, selector] of AUTOMATION_FIELDS) {
+      for (const [, label, selector] of getAutomationFields()) {
         const value = getInputValue(form.querySelector(selector));
         if (value) autoLines.push(`${label} ${value}`);
       }
     }
 
     if (lines.length === 0 && autoLines.length === 0) {
-      ui.notifications.warn('Please select at least one section and fill in the fields.');
+      ui.notifications.warn(localize('warnings.sectionRequired', 'Please select at least one section and fill in the fields.'));
       return;
     }
 
@@ -384,15 +427,15 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
         if (app.activeSections.has('automation')) applyAutomationToEditorContent(app.editorRef, autoLines.join('\n'), true);
         else applyAutomationToEditorContent(app.editorRef, '', true);
         app.close();
-        ui.notifications.info('Applied to description!');
+        ui.notifications.info(localize('notifications.applied', 'Applied to description!'));
         return;
       }
     }
     navigator.clipboard.writeText([applyText, autoLines.join('\n')].filter(Boolean).join('\n')).then(() => {
-      ui.notifications.info('Copied! (no active editor)');
+      ui.notifications.info(localize('notifications.copiedNoEditor', 'Copied! (no active editor)'));
       app.close();
     }).catch(() => {
-      ui.notifications.error('Failed to copy.');
+      ui.notifications.error(localize('notifications.copyFailed', 'Failed to copy.'));
     });
   }
 }

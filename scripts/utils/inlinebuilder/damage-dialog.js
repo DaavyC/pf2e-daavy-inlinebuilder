@@ -1,5 +1,5 @@
 import { DAMAGE_TYPES } from '../../data/tables.js';
-import { MODULE_ID } from '../constants.js';
+import { MODULE_ID, localize } from '../constants.js';
 import { appendInputValue } from './dom-helpers.js';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -11,7 +11,7 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     classes: ['inlinebuilder', 'pf2e-daavy-inlinebuilder-comfort-dialog'],
     tag: 'div',
     window: {
-      title: 'Add Damage',
+      title: localize('window.addDamage', 'Add Damage'),
       icon: 'fas fa-bolt'
     },
     position: { width: 320 },
@@ -35,7 +35,15 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   async _prepareContext(_options) {
     return {
       damageTypes: DAMAGE_TYPES,
-      isPersistent: this.selectedMode === 'persistent'
+      isPersistent: this.selectedMode === 'persistent',
+      labels: {
+        damage: localize('labels.damage', 'Damage'),
+        formulaOnly: localize('labels.formulaOnly', 'Formula only'),
+        type: localize('labels.type', 'Type'),
+        damageType: localize('labels.damageTypeLower', 'Damage type'),
+        selectPlaceholder: localize('labels.selectPlaceholder', '-- Select --'),
+        add: localize('labels.add', 'Add')
+      }
     };
   }
 
@@ -51,11 +59,11 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     const formula = damageInput.value.trim().replace(/\s+/g, '');
     const typeSuggestValue = typeSuggest?.value || '';
     if (!formula) {
-      ui.notifications.warn('Damage: A damage formula is required.');
+      ui.notifications.warn(localize('warnings.damageFormulaRequired', 'Damage: A damage formula is required.'));
       return;
     }
     if (!typeSuggestValue) {
-      ui.notifications.warn('Damage: Please select a damage type.');
+      ui.notifications.warn(localize('warnings.damageTypeRequired', 'Damage: Please select a damage type.'));
       return;
     }
 
@@ -76,7 +84,7 @@ function openDamageDialog(targetInput, mode = 'normal') {
   new DamageDialogV2({
     targetInput,
     mode,
-    window: { title: mode === 'persistent' ? 'Add Persistent Damage' : 'Add Damage' }
+    window: { title: mode === 'persistent' ? localize('window.addPersistentDamage', 'Add Persistent Damage') : localize('window.addDamage', 'Add Damage') }
   }).render(true);
 }
 
