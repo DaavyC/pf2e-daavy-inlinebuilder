@@ -15,12 +15,7 @@
         <span>{{labels.damageType}}</span>
       </div>
       <div class="inlinebuilder-control">
-        <select name="type-suggest">
-          <option value="">{{labels.selectPlaceholder}}</option>
-          {{#each damageTypes}}
-          <option value="{{this}}">{{this}}</option>
-          {{/each}}
-        </select>
+        {{> inlinebuilderDamageTypeSelect}}
       </div>
     </div>
   </fieldset>

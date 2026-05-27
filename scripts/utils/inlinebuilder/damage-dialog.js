@@ -1,28 +1,28 @@
 import { DAMAGE_TYPES } from '../../data/tables.js';
-import { MODULE_ID, localize } from '../constants.js';
+import { localize } from '../constants.js';
+import {
+  ApplicationV2,
+  HandlebarsApplicationMixin,
+  getInlineBuilderDialogOptions,
+  getTemplatePart
+} from './application-helpers.js';
 import { appendInputValue } from './dom-helpers.js';
-
-const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 // Manual damage dialog.
 class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
-  static DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-damage-dialog',
-    classes: ['inlinebuilder', 'pf2e-daavy-inlinebuilder-comfort-dialog'],
-    tag: 'div',
-    window: {
-      title: localize('window.addDamage', 'Add Damage'),
-      icon: 'fas fa-bolt'
-    },
-    position: { width: 320 },
+    classes: ['pf2e-daavy-inlinebuilder-comfort-dialog'],
+    titleKey: 'window.addDamage',
+    titleFallback: 'Add Damage',
+    icon: 'fas fa-bolt',
+    width: 320,
     actions: {
       add: DamageDialogV2.addDamage
     }
-  };
+  });
 
-  static PARTS = {
-    form: { template: `modules/${MODULE_ID}/templates/damage-dialog.hbs` }
-  };
+  static PARTS = getTemplatePart('damage-dialog');
 
   // Initializes instance state.
   constructor(options = {}) {
@@ -35,6 +35,7 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   async _prepareContext(_options) {
     return {
       damageTypes: DAMAGE_TYPES,
+      damageTypeSelect: { name: 'type-suggest' },
       isPersistent: this.selectedMode === 'persistent',
       labels: {
         damage: localize('labels.damage', 'Damage'),

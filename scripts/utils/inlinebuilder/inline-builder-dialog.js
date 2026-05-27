@@ -1,7 +1,13 @@
 import { TEMPLATE_CONFIG } from '../../data/tables.js';
-import { MODULE_ID, localize } from '../constants.js';
+import { localize } from '../constants.js';
 import { applyAutomationToEditorContent, detectExistingAutomations } from './automation-editor.js';
 import { getAutomationFields, getAutomationTemplateFields } from './automation-fields.js';
+import {
+  ApplicationV2,
+  HandlebarsApplicationMixin,
+  getInlineBuilderDialogOptions,
+  getTemplatePart
+} from './application-helpers.js';
 import {
   automationLinesToParagraphHtml,
   findFirstEditorDivider,
@@ -25,8 +31,6 @@ import {
   generateTemplateString,
   parseDescriptionBlock
 } from './description-lines.js';
-
-const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 function localizeOption(option) {
   const fallback = option.tooltip ?? option.value;
@@ -72,23 +76,20 @@ function getInlineBuilderLabels() {
 
 // Main Inline Builder dialog.
 class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
-  static DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-dialog',
-    classes: ['inlinebuilder'],
-    tag: 'div',
+    titleKey: 'window.inlineBuilder',
+    titleFallback: 'Inline Builder',
+    icon: 'fas fa-pen',
+    width: 520,
     window: {
-      title: localize('window.inlineBuilder', 'Inline Builder'),
-      icon: 'fas fa-pen',
       resizable: false,
       minimizable: true
     },
-    position: { width: 520 },
     actions: { insertAll: InlineBuilderDialog.insertAll }
-  };
+  });
 
-  static PARTS = {
-    form: { template: `modules/${MODULE_ID}/templates/main.hbs` }
-  };
+  static PARTS = getTemplatePart('main');
 
   activeSections = new Set(['template']);
   selectedTemplateType = null;
@@ -114,6 +115,7 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       labels: getInlineBuilderLabels(),
       templateTypes: TEMPLATE_CONFIG.types.map(localizeOption),
       damageTypes: TEMPLATE_CONFIG.damageTypes,
+      damageTypeSelect: { id: 'damage-type', name: 'damageType' },
       saveTypes: TEMPLATE_CONFIG.saveTypes.map(localizeOption),
       showDCOptions: TEMPLATE_CONFIG.showDCOptions.map(localizeOption),
       traits: TEMPLATE_CONFIG.traits.map(localizeOption),

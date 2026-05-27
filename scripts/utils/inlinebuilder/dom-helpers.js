@@ -60,6 +60,16 @@ function findFirstEditorDivider(raw) {
   return { index: match.index, text: match[0], isDash: match === dashMatch };
 }
 
+// Finds HTML dividers.
+function findHtmlDividers(raw) {
+  return [...String(raw ?? '').matchAll(/<hr[\s\S]*?\/?>/gi)];
+}
+
+// Finds the last HTML divider.
+function findLastHtmlDivider(raw) {
+  return findHtmlDividers(raw).at(-1) ?? null;
+}
+
 // Escapes HTML text.
 function escapeHtml(text) {
   return String(text)
@@ -88,6 +98,8 @@ export {
   clampConditionValue,
   clampNumber,
   findFirstEditorDivider,
+  findHtmlDividers,
+  findLastHtmlDivider,
   getEditorEditable,
   getHookElement,
   getInputValue,

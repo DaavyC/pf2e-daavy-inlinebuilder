@@ -77,6 +77,16 @@ function convertAutomationHtmlToShortText(content) {
         });
 }
 
+// Extracts braced short damage tags.
+function getShortDamageTags(text, prefix) {
+    const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(`\\{${escapedPrefix}([^-{}]+)-([^{}]+)\\}`, "ig");
+    return Array.from(String(text ?? "").matchAll(regex), (match) => ({
+        formula: match[1].trim(),
+        damageType: match[2].trim()
+    }));
+}
+
 // Extracts the line outcome.
 function getAutomationLineOutcome(line) {
     const idx = String(line ?? "").indexOf(":");
@@ -101,10 +111,10 @@ function extractDamageSpecs(text) {
         });
     }
 
-    for (const shortMatch of String(text ?? "").matchAll(/\{dmg-([^-{}]+)-([^{}]+)\}/ig)) {
+    for (const shortDamage of getShortDamageTags(text, "dmg-")) {
         specs.push({
-            formula: shortMatch[1].trim(),
-            damageType: shortMatch[2].trim(),
+            formula: shortDamage.formula,
+            damageType: shortDamage.damageType,
             traits: [],
             isPersistent: false
         });
@@ -170,8 +180,8 @@ function extractAutomationConditions(line) {
         addUniquePersistentDamage(persistentMatch[1].trim(), persistentMatch[2].trim());
     }
 
-    for (const persistentShortMatch of conditionText.matchAll(/\{pd-([^-{}]+)-([^{}]+)\}/ig)) {
-        addUniquePersistentDamage(persistentShortMatch[1].trim(), persistentShortMatch[2].trim());
+    for (const persistentDamage of getShortDamageTags(conditionText, "pd-")) {
+        addUniquePersistentDamage(persistentDamage.formula, persistentDamage.damageType);
     }
 
     const textWithoutUuidTags = conditionText.replace(/@UUID\[[^\]]+\]\{([^}]+)\}/ig, (_match, inner) => {

@@ -1,11 +1,16 @@
 import { DAMAGE_TABLES, DC_TABLE } from '../../data/tables.js';
-import { MODULE_ID, localize } from '../constants.js';
+import { localize } from '../constants.js';
+import {
+  ApplicationV2,
+  HandlebarsApplicationMixin,
+  getInlineBuilderDialogOptions,
+  getTemplatePart
+} from './application-helpers.js';
 import { clampNumber, parseInteger } from './dom-helpers.js';
 import { getCreatureLevelFromSheet } from './state.js';
 
 const DMG_SUGGEST_LEVEL_MIN = -1;
 const DMG_SUGGEST_LEVEL_MAX = 24;
-const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
 function getSuggestionLabels() {
   return {
@@ -73,23 +78,19 @@ function adjustDisplayedLevel(app, target, selector) {
 
 // DC suggestion dialog.
 class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
-  static DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-dc-suggestion',
-    classes: ['inlinebuilder'],
-    window: {
-      title: localize('window.dcSuggestion', 'DC Suggestion'),
-      icon: 'fas fa-shield-alt'
-    },
-    position: { width: 320 },
+    titleKey: 'window.dcSuggestion',
+    titleFallback: 'DC Suggestion',
+    icon: 'fas fa-shield-alt',
+    width: 320,
     actions: {
       adjustLevel: DCSuggestionDialogV2.adjustLevel,
       confirmDC: DCSuggestionDialogV2.confirmDC
     }
-  };
+  });
 
-  static PARTS = {
-    form: { template: `modules/${MODULE_ID}/templates/dc-suggestion.hbs` }
-  };
+  static PARTS = getTemplatePart('dc-suggestion');
 
   // Initializes instance state.
   constructor(options = {}) {
@@ -104,6 +105,7 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     return {
       baseLevel: getCreatureLevelFromSheet() ?? 0,
       currentLevel: this.currentLevel,
+      levelControlId: 'dc-suggest-level',
       labels: getSuggestionLabels(),
       intensities: getIntensityOptions(['extreme', 'high', 'moderate'])
     };
@@ -134,15 +136,12 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
 
 // Damage suggestion dialog.
 class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
-  static DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-damage-suggestion',
-    classes: ['inlinebuilder'],
-    tag: 'div',
-    window: {
-      title: localize('window.damageSuggestion', 'Damage Suggestion'),
-      icon: 'fas fa-dragon'
-    },
-    position: { width: 320 },
+    titleKey: 'window.damageSuggestion',
+    titleFallback: 'Damage Suggestion',
+    icon: 'fas fa-dragon',
+    width: 320,
     actions: {
       selectType: DamageSuggestionDialogV2.selectType,
       selectSub: DamageSuggestionDialogV2.selectSub,
@@ -150,11 +149,9 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
       confirm: DamageSuggestionDialogV2.confirmDamage,
       close: DamageSuggestionDialogV2.closeDialog
     }
-  };
+  });
 
-  static PARTS = {
-    form: { template: `modules/${MODULE_ID}/templates/damage-suggestion.hbs` }
-  };
+  static PARTS = getTemplatePart('damage-suggestion');
 
   // Initializes instance state.
   constructor(options = {}) {
@@ -172,6 +169,7 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     return {
       baseLevel: this.baseLevel,
       currentLevel: this.currentLevel,
+      levelControlId: 'dmg-suggest-level',
       showStep1: this.currentStep === 1,
       showStep2: this.currentStep === 2,
       isArea: this.selectedType === 'area',

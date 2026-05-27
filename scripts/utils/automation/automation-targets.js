@@ -1,4 +1,5 @@
 import { normalizeText } from "../text-helpers.js";
+import { uniqueBy } from "../collection-helpers.js";
 import { MODULE_ID, TOOLBELT_ID } from "../constants.js";
 import * as profileAutomation from "./automation-profile.js";
 
@@ -208,13 +209,10 @@ async function extractCheckTargetsFromDom(runtime, message, root) {
 
 // Normalizes completed targets.
 function normalizeCompletedTargets(targets) {
-    const byUuid = new Map();
-    for (const target of targets) {
-        if (!target?.uuid || !target.outcome || !target.actor) continue;
-        if (byUuid.has(target.uuid)) continue;
-        byUuid.set(target.uuid, target);
-    }
-    return Array.from(byUuid.values());
+    return uniqueBy(
+        targets.filter((target) => target?.uuid && target.outcome && target.actor),
+        (target) => target.uuid
+    );
 }
 
 // Finds save rows.
@@ -307,17 +305,8 @@ async function getToolbeltTargetRecords(runtime, message) {
     if (Array.isArray(data?.splashTargets)) rawTargets.push(...data.splashTargets);
 
     const apiTargets = getToolbeltMessageTargets(message);
-    const records = [];
-    const seen = new Set();
-
-    for (const value of rawTargets.concat(apiTargets)) {
-        const record = await normalizeTargetRecord(runtime, value);
-        if (!record?.uuid || seen.has(record.uuid)) continue;
-        seen.add(record.uuid);
-        records.push(record);
-    }
-
-    return records;
+    const records = await Promise.all(rawTargets.concat(apiTargets).map((value) => normalizeTargetRecord(runtime, value)));
+    return uniqueBy(records, (record) => record?.uuid ?? null);
 }
 
 // Reads message targets.

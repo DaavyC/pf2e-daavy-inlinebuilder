@@ -1,16 +1,6 @@
 <div class="inlinebuilder-content inlinebuilder-dmg-suggest">
   <fieldset class="template-section">
-    <div class="inlinebuilder-row">
-      <div class="inlinebuilder-label">
-        <label>{{labels.level}}</label>
-        <span>{{labels.creatureLevel}}</span>
-      </div>
-      <div class="inlinebuilder-control dmg-level-row">
-        <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="-1">&minus;</button>
-        <span id="dc-suggest-level" class="dmg-level-value">{{currentLevel}}</span>
-        <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="1">+</button>
-      </div>
-    </div>
+    {{> inlinebuilderLevelControl}}
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
         <label>{{labels.intensity}}</label>

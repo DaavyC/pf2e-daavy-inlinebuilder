@@ -1,29 +1,29 @@
-import { MODULE_ID, localize } from '../constants.js';
+import { localize } from '../constants.js';
+import {
+  ApplicationV2,
+  HandlebarsApplicationMixin,
+  getInlineBuilderDialogOptions,
+  getTemplatePart
+} from './application-helpers.js';
 import { getInputValue } from './dom-helpers.js';
 import { showConditionPicker } from './condition-picker.js';
 
-const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
-
 // Comfort edit dialog.
 class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
-  static DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-comfort-edit',
-    classes: ['inlinebuilder', 'pf2e-daavy-inlinebuilder-comfort-dialog'],
-    tag: 'div',
-    window: {
-      title: localize('window.textEditor', 'Text Editor'),
-      icon: 'fas fa-edit'
-    },
-    position: { width: 520 },
+    classes: ['pf2e-daavy-inlinebuilder-comfort-dialog'],
+    titleKey: 'window.textEditor',
+    titleFallback: 'Text Editor',
+    icon: 'fas fa-edit',
+    width: 520,
     actions: {
       save: ComfortEditDialogV2.saveContent,
       addCondition: ComfortEditDialogV2.addCondition
     }
-  };
+  });
 
-  static PARTS = {
-    form: { template: `modules/${MODULE_ID}/templates/comfort-edit.hbs` }
-  };
+  static PARTS = getTemplatePart('comfort-edit');
 
   // Initializes instance state.
   constructor(options = {}) {

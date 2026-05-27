@@ -1,7 +1,7 @@
 import { convertAutomationHtmlToShortText, convertAutomationText } from '../text-helpers.js';
 import { localize } from '../constants.js';
 import { getAutomationFields, getAutomationResultByLabel } from './automation-fields.js';
-import { automationLinesToParagraphHtml, getEditorEditable } from './dom-helpers.js';
+import { automationLinesToParagraphHtml, findHtmlDividers, findLastHtmlDivider, getEditorEditable } from './dom-helpers.js';
 
 // Detects existing automations.
 function detectExistingAutomations(editorRef) {
@@ -10,12 +10,10 @@ function detectExistingAutomations(editorRef) {
   const editable = getEditorEditable(editorRef);
   if (!editable) return result;
   const html = editable.innerHTML || '';
-  const hrRegex = /<hr[\s\S]*?\/?>/gi;
-  const matches = [...html.matchAll(hrRegex)];
+  const lastDivider = findLastHtmlDivider(html);
   let targetHtml = html;
-  if (matches.length > 0) {
-    const lastMatch = matches[matches.length - 1];
-    targetHtml = html.substring(lastMatch.index + lastMatch[0].length);
+  if (lastDivider) {
+    targetHtml = html.substring(lastDivider.index + lastDivider[0].length);
   }
   const tmp = document.createElement('div');
   tmp.innerHTML = targetHtml;
@@ -36,14 +34,13 @@ function applyAutomationToEditorContent(editorRef, applyText, silent = false) {
   const editable = getEditorEditable(editorRef);
   if (!editable) return false;
   const raw = editable.innerHTML || '';
-  const hrRegex = /<hr[\s\S]*?\/?>/gi;
-  const matches = [...raw.matchAll(hrRegex)];
+  const dividers = findHtmlDividers(raw);
+  const lastDivider = findLastHtmlDivider(raw);
   if (!applyText.trim()) {
-    if (matches.length > 0) {
-      const lastMatch = matches[matches.length - 1];
-      const content = raw.substring(lastMatch.index + lastMatch[0].length).trim();
-      if (getAutomationFields().some(([, label]) => content.includes(label)) || matches.length > 1) {
-        editable.innerHTML = raw.substring(0, lastMatch.index).trim();
+    if (lastDivider) {
+      const content = raw.substring(lastDivider.index + lastDivider[0].length).trim();
+      if (getAutomationFields().some(([, label]) => content.includes(label)) || dividers.length > 1) {
+        editable.innerHTML = raw.substring(0, lastDivider.index).trim();
         editable.dispatchEvent(new Event('input', { bubbles: true }));
         if (!silent) ui.notifications.info(localize('notifications.automationCleared', 'Automation cleared!'));
         return true;
@@ -51,7 +48,9 @@ function applyAutomationToEditorContent(editorRef, applyText, silent = false) {
     }
     return false;
   }
-  let newContent = (matches.length > 1) ? raw.substring(0, matches[matches.length - 1].index + matches[matches.length - 1][0].length) : (raw && raw.trim().length > 0 ? raw + '<hr>' : raw);
+  let newContent = (dividers.length > 1 && lastDivider)
+    ? raw.substring(0, lastDivider.index + lastDivider[0].length)
+    : (raw && raw.trim().length > 0 ? raw + '<hr>' : raw);
   newContent += automationLinesToParagraphHtml(applyText, convertAutomationText);
   editable.innerHTML = newContent;
   editable.dispatchEvent(new Event('input', { bubbles: true }));

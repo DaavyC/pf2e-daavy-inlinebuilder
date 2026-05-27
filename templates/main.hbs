@@ -25,11 +25,7 @@
         <span>{{labels.areaShape}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
-        {{#each templateTypes}}
-        <button type="button" class="icon-btn template-type-btn" data-value="{{this.value}}" data-tooltip="{{this.tooltip}}">
-          <i class="fas {{this.icon}}"></i>
-        </button>
-        {{/each}}
+        {{> inlinebuilderIconSegment options=templateTypes buttonClass="template-type-btn"}}
       </div>
     </div>
     <div class="inlinebuilder-row">
@@ -71,12 +67,7 @@
         <span>{{labels.selectType}}</span>
       </div>
       <div class="inlinebuilder-control">
-        <select id="damage-type" name="damageType">
-          <option value="">{{labels.selectPlaceholder}}</option>
-          {{#each damageTypes}}
-          <option value="{{this}}">{{this}}</option>
-          {{/each}}
-        </select>
+        {{> inlinebuilderDamageTypeSelect}}
       </div>
     </div>
     <div class="inlinebuilder-row">
@@ -101,11 +92,7 @@
         <span>{{labels.checkType}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
-        {{#each saveTypes}}
-        <button type="button" class="icon-btn save-type-btn" data-value="{{this.value}}" data-tooltip="{{this.tooltip}}">
-          <i class="fas {{this.icon}}"></i>
-        </button>
-        {{/each}}
+        {{> inlinebuilderIconSegment options=saveTypes buttonClass="save-type-btn"}}
       </div>
     </div>
     <div class="inlinebuilder-row">
@@ -138,11 +125,7 @@
         <span>{{labels.chatVisibility}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
-        {{#each showDCOptions}}
-        <button type="button" class="icon-btn show-dc-btn{{#if (eq this.value 'all')}} active{{/if}}" data-value="{{this.value}}" data-tooltip="{{this.tooltip}}">
-          <i class="fas {{this.icon}}"></i>
-        </button>
-        {{/each}}
+        {{> inlinebuilderIconSegment options=showDCOptions buttonClass="show-dc-btn" activeValue="all"}}
       </div>
     </div>
   </fieldset>

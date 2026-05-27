@@ -1,10 +1,15 @@
 import { PF2E_CONDITIONS, PF2E_CONDITION_MAP, VALUED_CONDITION_SET } from '../../data/tables.js';
-import { MODULE_ID, localize } from '../constants.js';
+import { localize } from '../constants.js';
+import {
+  ApplicationV2,
+  HandlebarsApplicationMixin,
+  getInlineBuilderDialogOptions,
+  getTemplatePart
+} from './application-helpers.js';
 import { clampConditionValue, getInputValue, setInputValue } from './dom-helpers.js';
 import { parseConditionTags, removeConditionTag, upsertConditionTag } from './condition-tags.js';
 import { openDamageDialog } from './damage-dialog.js';
 
-const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 const CONDITION_LABEL_BY_SLUG = new Map(PF2E_CONDITIONS.map(slug => [
   slug,
   slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
@@ -12,24 +17,20 @@ const CONDITION_LABEL_BY_SLUG = new Map(PF2E_CONDITIONS.map(slug => [
 
 // Condition picker dialog.
 class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
-  static DEFAULT_OPTIONS = {
+  static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-condition-picker',
-    classes: ['inlinebuilder', 'pf2e-daavy-inlinebuilder-picker-dialog'],
-    tag: 'div',
-    window: {
-      title: localize('window.selectCondition', 'Select Condition'),
-      icon: 'fas fa-list-check'
-    },
-    position: { width: 480 },
+    classes: ['pf2e-daavy-inlinebuilder-picker-dialog'],
+    titleKey: 'window.selectCondition',
+    titleFallback: 'Select Condition',
+    icon: 'fas fa-list-check',
+    width: 480,
     actions: {
       selectCondition: ConditionPickerDialogV2.selectCondition,
       removeCondition: ConditionPickerDialogV2.removeCondition
     }
-  };
+  });
 
-  static PARTS = {
-    form: { template: `modules/${MODULE_ID}/templates/condition-picker.hbs` }
-  };
+  static PARTS = getTemplatePart('condition-picker');
 
   // Initializes instance state.
   constructor(options = {}) {

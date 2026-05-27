@@ -1,4 +1,5 @@
 import { createDamageSignature, extractDamageSpecs } from "../text-helpers.js";
+import { uniqueBy } from "../collection-helpers.js";
 import { MODULE_ID } from "../constants.js";
 
 const BASIC_DAMAGE_MULTIPLIERS = {
@@ -105,17 +106,11 @@ function createDamageJobId(sourceMessage, job, applications) {
 
 // Removes duplicate applications.
 function getUniqueDamageApplications(applications) {
-    const uniqueApplications = [];
-    const seen = new Set();
-
-    for (const application of applications) {
-        const key = `${application.uuid}:${application.outcome}:${Number(application.multiplier)}`;
-        if (!application.uuid || seen.has(key)) continue;
-        seen.add(key);
-        uniqueApplications.push({ ...application });
-    }
-
-    return uniqueApplications;
+    return uniqueBy(
+        applications,
+        (application) => application.uuid ? `${application.uuid}:${application.outcome}:${Number(application.multiplier)}` : null,
+        (application) => ({ ...application })
+    );
 }
 
 // Explains the job block reason.
