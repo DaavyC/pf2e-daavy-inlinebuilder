@@ -3,7 +3,6 @@ import { MODULE_ID, localize } from "./config.js";
 const DEBUG_SETTING = "debugAutomation";
 let readyLogRegistered = false;
 
-// Checks whether debug is enabled.
 function isDebugEnabled() {
     try {
         return game.settings.get(MODULE_ID, DEBUG_SETTING) === true;
@@ -12,7 +11,6 @@ function isDebugEnabled() {
     }
 }
 
-// Registers debug settings.
 function registerDebugSettings() {
     if (game.settings.settings.has(`${MODULE_ID}.${DEBUG_SETTING}`)) return;
 
@@ -36,18 +34,15 @@ function registerDebugSettings() {
     }
 }
 
-// Writes debug logs.
 function logDebug(event, data = {}) {
     console.log(`[${MODULE_ID}] ${event}`, data);
 }
 
-// Writes damage logs.
 function debugDamage(event, data = {}) {
     if (!isDebugEnabled()) return;
     logDebug(`damage:${event}`, data);
 }
 
-// Builds damage log data.
 function getDamageApplicationLogData(application) {
     return {
         uuid: application.uuid,

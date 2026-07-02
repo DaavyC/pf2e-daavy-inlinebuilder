@@ -1,9 +1,9 @@
-import { DamageDebug } from "./debug.js";
+import { DamageDebug, registerDebugSettings } from "./debug.js";
 import { exposeInlineBuilderApi, registerModuleHooks } from "./hooks.js";
-import { registerModuleSettings } from "./settings.js";
 import { MODULE_ID, TOOLBELT_ID } from "./config.js";
-import { PF2E_CONDITION_MAP, VALUED_CONDITION_SET } from "./data/tables.js";
 import {
+    PF2E_CONDITION_MAP,
+    VALUED_CONDITION_SET,
     createDamageSignature,
     extractAutomationConditions,
     extractDamageSpecs,
@@ -12,14 +12,12 @@ import {
     uniqueBy
 } from "./utils.js";
 
-const damageAutomation = (() => {
 const BASIC_DAMAGE_MULTIPLIERS = {
     success: "0.5",
     failure: "1",
     criticalFailure: "2"
 };
 
-// Marks damage automation complete.
 async function completeDamageAutomation(runtime, message, processedDamage = null, processedDamageJobs = null) {
     runtime.damageCompletedSources.add(message.id);
     const update = {
@@ -30,13 +28,11 @@ async function completeDamageAutomation(runtime, message, processedDamage = null
     await message.update(update);
 }
 
-// Detects potential damage automation.
 function hasPotentialDamageAutomation(_sourceMessage, profile) {
     const isBasic = profile.mainCheckConfig?.basic === true;
     return isBasic ? !!profile.mainDamageSpec : profile.damageSpecsByOutcome.size > 0;
 }
 
-// Builds damage jobs.
 function getDamageJobs(targets, profile) {
     const checkConfig = profile.mainCheckConfig;
     const isBasic = checkConfig?.basic === true;
@@ -83,7 +79,6 @@ function getDamageJobs(targets, profile) {
     return Array.from(jobsBySignature.values()).filter((job) => job.applications.length > 0);
 }
 
-// Reads the main save config.
 function getMainCheckConfigFromLines(lines) {
     const line = lines.find((value) => /@Check\[/i.test(value));
     if (!line) return null;
@@ -93,7 +88,6 @@ function getMainCheckConfigFromLines(lines) {
     };
 }
 
-// Reads the main damage spec.
 function getMainDamageSpecFromLines(lines) {
     const line = lines.find((value) => /Damage\s*:/i.test(value) && /@Damage\[/i.test(value));
     if (!line) return null;
@@ -101,12 +95,10 @@ function getMainDamageSpecFromLines(lines) {
     return extractDamageSpecs(line).find((damage) => !damage.isPersistent) ?? null;
 }
 
-// Creates the processed damage key.
 function createDamageProcessedKey(sourceMessage, application, signature) {
     return `${sourceMessage.id}:${application.uuid}:${application.outcome}:${signature}`;
 }
 
-// Creates the damage job id.
 function createDamageJobId(sourceMessage, job, applications) {
     const targetSignature = applications
         .map((application) => `${application.uuid}:${application.outcome}:${Number(application.multiplier)}`)
@@ -115,7 +107,6 @@ function createDamageJobId(sourceMessage, job, applications) {
     return `${sourceMessage.id}:${job.signature}:${targetSignature}`;
 }
 
-// Removes duplicate applications.
 function getUniqueDamageApplications(applications) {
     return uniqueBy(
         applications,
@@ -124,7 +115,6 @@ function getUniqueDamageApplications(applications) {
     );
 }
 
-// Explains the job block reason.
 function getDamageJobBlockedReason(runtime, sourceMessageId, jobId, processedDamageJobs) {
     if (processedDamageJobs[jobId]) return "processedDamageJobs";
     if (runtime.damageJobLocks.has(jobId)) return "damageJobLocks";
@@ -132,7 +122,6 @@ function getDamageJobBlockedReason(runtime, sourceMessageId, jobId, processedDam
     return null;
 }
 
-// Creates damage message flavor.
 function createDamageFlavor(item, traits) {
     let flavor = `<h4 class="action"><strong>${item.name ?? game.i18n.localize("PF2E.DamageRoll")}</strong></h4>`;
     if (traits.length === 0) return flavor;
@@ -148,58 +137,21 @@ function createDamageFlavor(item, traits) {
     return flavor;
 }
 
-// Creates the damage button key.
 function getDamageApplyButtonKey(targetUuid, multiplier) {
     return `${targetUuid}:${Number(multiplier)}`;
 }
 
-// Creates the damage click key.
 function getDamageApplicationClickKey(runtime, messageId, application) {
-    return application.globalKey ?? `${messageId}:${runtime.getDamageApplyButtonKey(application.uuid, application.multiplier)}`;
+    return application.globalKey ?? `${messageId}:${getDamageApplyButtonKey(application.uuid, application.multiplier)}`;
 }
 
-// Creates the global application key.
 function createGlobalDamageApplicationKey(damageMessage, application) {
     const sourceId = damageMessage.getFlag?.(MODULE_ID, "sourceMessage") ?? damageMessage.id;
     const signature = damageMessage.getFlag?.(MODULE_ID, "damageSignature") ?? "damage";
     return `${sourceId}:${signature}:${application.uuid}:${application.outcome}:${Number(application.multiplier)}`;
 }
 
-    return {
-        completeDamageAutomation,
-        createDamageFlavor,
-        createDamageJobId,
-        createDamageProcessedKey,
-        createGlobalDamageApplicationKey,
-        getDamageApplicationClickKey,
-        getDamageApplyButtonKey,
-        getDamageJobBlockedReason,
-        getDamageJobs,
-        getMainCheckConfigFromLines,
-        getMainDamageSpecFromLines,
-        getUniqueDamageApplications,
-        hasPotentialDamageAutomation
-    };
-})();
 
-const {
-    completeDamageAutomation,
-    createDamageFlavor,
-    createDamageJobId,
-    createDamageProcessedKey,
-    createGlobalDamageApplicationKey,
-    getDamageApplicationClickKey,
-    getDamageApplyButtonKey,
-    getDamageJobBlockedReason,
-    getDamageJobs,
-    getMainCheckConfigFromLines,
-    getMainDamageSpecFromLines,
-    getUniqueDamageApplications,
-    hasPotentialDamageAutomation
-} = damageAutomation;
-
-const profileAutomation = (() => {
-// Applies profile conditions.
 async function applyConditionsFromProfile(actor, profile, degree) {
     if (!profile?.description) return false;
 
@@ -214,7 +166,6 @@ async function applyConditionsFromProfile(actor, profile, degree) {
     return applied;
 }
 
-// Builds the description profile.
 function getDescriptionProfile(runtime, item) {
     const description = item?.system?.description?.value || "";
     const cacheKey = `${item?.uuid ?? item?.id ?? "item"}:${runtime.hashString(description)}`;
@@ -252,7 +203,6 @@ function getDescriptionProfile(runtime, item) {
     return profile;
 }
 
-// Splits description regions.
 function getDescriptionRegions(description) {
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = description;
@@ -268,7 +218,6 @@ function getDescriptionRegions(description) {
     };
 }
 
-// Extracts lines from HTML.
 function getLinesFromHtml(source) {
     const textDiv = document.createElement("div");
     textDiv.innerHTML = source
@@ -281,7 +230,6 @@ function getLinesFromHtml(source) {
         .filter(Boolean);
 }
 
-// Extracts HTML between elements.
 function getSiblingHtml(startNode, stopNode = null) {
     let html = "";
     let current = startNode;
@@ -293,7 +241,6 @@ function getSiblingHtml(startNode, stopNode = null) {
     return html;
 }
 
-// Applies one condition.
 async function applyCondition(actor, conditionObj) {
     if (!actor || !conditionObj) return false;
 
@@ -342,7 +289,6 @@ async function applyCondition(actor, conditionObj) {
     return false;
 }
 
-// Applies a valued condition.
 async function applyValuedCondition(actor, conditionName, rawValue) {
     const requestedValue = Math.max(1, Number.parseInt(rawValue ?? 1, 10) || 1);
     const existing = getExistingCondition(actor, conditionName);
@@ -366,13 +312,11 @@ async function applyValuedCondition(actor, conditionName, rawValue) {
     return false;
 }
 
-// Checks active conditions.
 function hasActiveCondition(actor, conditionName) {
     if (typeof actor.hasCondition === "function" && actor.hasCondition(conditionName)) return true;
     return !!getExistingCondition(actor, conditionName);
 }
 
-// Finds an existing condition.
 function getExistingCondition(actor, conditionName) {
     if (!actor || !conditionName) return null;
 
@@ -397,24 +341,12 @@ function getExistingCondition(actor, conditionName) {
     return null;
 }
 
-// Reads the condition value.
 function getConditionValue(condition) {
     const value = condition?.value ?? condition?.system?.value?.value ?? condition?._source?.system?.value?.value;
     return typeof value === "number" ? value : null;
 }
 
-    return {
-        applyConditionsFromProfile,
-        getDescriptionProfile
-    };
-})();
 
-const {
-    applyConditionsFromProfile,
-    getDescriptionProfile
-} = profileAutomation;
-
-const targetAutomation = (() => {
 const OUTCOMES = ["criticalFailure", "failure", "success", "criticalSuccess"];
 const OUTCOME_SET = new Set(OUTCOMES);
 const CHECK_ROWS_SELECTOR = ".pf2e-toolbelt-target-targetRows:not(.pf2e-toolbelt-target-damage) .target-row";
@@ -437,7 +369,6 @@ const NORMALIZED_OUTCOME_LABELS = new Map(
         .sort(([left], [right]) => right.length - left.length)
 );
 
-// Rolls pending target saves.
 async function autoRollTargetChecks(runtime, message, root = null) {
     if (!message?.id || runtime.autoRollingMessages.has(message.id) || !hasToolbeltSaveData(message)) return;
 
@@ -474,7 +405,6 @@ async function autoRollTargetChecks(runtime, message, root = null) {
     }
 }
 
-// Finds a pending save.
 function findPendingCheckRoll(runtime, message, root) {
     const rollAll = runtime.asHTMLElement(root.querySelector(ROLL_ALL_SAVES_SELECTOR));
     const rollAllKey = `${message.id}:roll-all-saves`;
@@ -500,12 +430,10 @@ function findPendingCheckRoll(runtime, message, root) {
     return null;
 }
 
-// Dispatches an automatic click.
 function dispatchAutomaticClick(runtime, control) {
     runtime.dispatchClick(control, game.user?.settings?.showCheckDialogs === true);
 }
 
-// Processes an automation message.
 async function processMessage(runtime, message, root = null) {
     if (!message?.id || runtime.processingMessages.has(message.id) || runtime.autoRollingMessages.has(message.id)) return;
     if (runtime.isDamageRollMessage(message) || !hasToolbeltSaveData(message)) return;
@@ -522,7 +450,7 @@ async function processMessage(runtime, message, root = null) {
         const item = await resolveItem(runtime, currentMessage);
         if (!item) return;
 
-        const profile = profileAutomation.getDescriptionProfile(runtime, item);
+        const profile = getDescriptionProfile(runtime, item);
         if (!profile.description) return;
 
         const processedTargets = foundry.utils.deepClone(currentMessage.getFlag(MODULE_ID, "processedTargets") ?? {});
@@ -535,7 +463,7 @@ async function processMessage(runtime, message, root = null) {
             const key = `${currentMessage.id}:${target.uuid}:${target.outcome}`;
             if (processedTargets[key]) continue;
 
-            await profileAutomation.applyConditionsFromProfile(target.actor, profile, target.outcome);
+            await applyConditionsFromProfile(target.actor, profile, target.outcome);
             updates[key] = true;
             changed = true;
         }
@@ -549,7 +477,6 @@ async function processMessage(runtime, message, root = null) {
     }
 }
 
-// Extracts completed save targets.
 async function extractCompletedCheckTargets(runtime, message, root = null) {
     const fromFlags = await extractCheckTargetsFromToolbeltFlags(runtime, message, root);
     if (fromFlags.length > 0) return normalizeCompletedTargets(fromFlags);
@@ -560,7 +487,6 @@ async function extractCompletedCheckTargets(runtime, message, root = null) {
     return normalizeCompletedTargets(await extractCheckTargetsFromDom(runtime, message, root));
 }
 
-// Extracts targets from Toolbelt flags.
 async function extractCheckTargetsFromToolbeltFlags(runtime, message, root = null) {
     const data = getToolbeltData(message);
     if (!data || data.type === "damage") return [];
@@ -597,7 +523,6 @@ async function extractCheckTargetsFromToolbeltFlags(runtime, message, root = nul
     return normalizeCompletedTargets(targets);
 }
 
-// Extracts targets from the DOM.
 async function extractCheckTargetsFromDom(runtime, message, root) {
     const rows = getCheckRows(root);
     const targets = [];
@@ -619,7 +544,6 @@ async function extractCheckTargetsFromDom(runtime, message, root) {
     return normalizeCompletedTargets(targets);
 }
 
-// Normalizes completed targets.
 function normalizeCompletedTargets(targets) {
     return uniqueBy(
         targets.filter((target) => target?.uuid && target.outcome && target.actor),
@@ -627,28 +551,23 @@ function normalizeCompletedTargets(targets) {
     );
 }
 
-// Finds save rows.
 function getCheckRows(root) {
     return Array.from(root.querySelectorAll(CHECK_ROWS_SELECTOR));
 }
 
-// Detects pending saves.
 function hasPendingCheckRolls(runtime, root) {
     return getCheckRows(root).some((row) => !extractOutcome(runtime, row) && !!findSaveControl(runtime, row));
 }
 
-// Finds the save control.
 function findSaveControl(runtime, row) {
     return runtime.asHTMLElement(row.querySelector(ROLL_SAVE_SELECTOR));
 }
 
-// Creates the handled save key.
 function createSaveHandledKey(message, row, rowIndex) {
     const targetName = normalizeText(row.querySelector(".target-header .name")?.textContent ?? "");
     return `${message.id}:${rowIndex}:${targetName || "unknown"}:roll-save`;
 }
 
-// Extracts the save outcome.
 function extractOutcome(runtime, row) {
     const degree = row.querySelector(".degree");
     const candidates = [degree, row].filter(Boolean);
@@ -666,13 +585,11 @@ function extractOutcome(runtime, row) {
     return null;
 }
 
-// Matches outcome text.
 function matchesOutcomeText(text, normalizedLabel) {
     if (normalizedLabel.length <= 2) return text === normalizedLabel;
     return text === normalizedLabel || text.includes(normalizedLabel);
 }
 
-// Resolves the row target.
 async function resolveTargetForRow(runtime, row, apiTargets, rowIndex) {
     const uuid = extractTargetUuid(row);
     if (uuid) {
@@ -690,26 +607,22 @@ async function resolveTargetForRow(runtime, row, apiTargets, rowIndex) {
     return apiTargets[rowIndex] ?? null;
 }
 
-// Extracts the target UUID.
 function extractTargetUuid(row) {
     const targetElement = row.querySelector("[data-target-uuid]") ?? row.closest("[data-target-uuid]");
     const uuid = targetElement?.dataset?.targetUuid ?? row.dataset?.targetUuid ?? row.dataset?.uuid;
     return uuid || null;
 }
 
-// Reads Toolbelt data.
 function getToolbeltData(message) {
     return message.flags?.[TOOLBELT_ID]?.targetHelper ?? null;
 }
 
-// Detects Toolbelt save data.
 function hasToolbeltSaveData(message) {
     const data = getToolbeltData(message);
     if (!data || data.type === "damage") return false;
     return Object.values(data.saveVariants ?? {}).some((variant) => !!variant?.statistic);
 }
 
-// Reads Toolbelt targets.
 async function getToolbeltTargetRecords(runtime, message) {
     const data = getToolbeltData(message);
     const rawTargets = [];
@@ -721,7 +634,6 @@ async function getToolbeltTargetRecords(runtime, message) {
     return uniqueBy(records, (record) => record?.uuid ?? null);
 }
 
-// Reads message targets.
 function getToolbeltMessageTargets(message) {
     const getMessageTargets = game.toolbelt?.api?.targetHelper?.getMessageTargets;
     if (typeof getMessageTargets !== "function") return [];
@@ -733,7 +645,6 @@ function getToolbeltMessageTargets(message) {
     }
 }
 
-// Normalizes target records.
 async function normalizeTargetRecord(runtime, value) {
     const uuid = typeof value === "string" ? value : value?.uuid;
     if (!uuid) return null;
@@ -755,7 +666,6 @@ async function normalizeTargetRecord(runtime, value) {
     return record;
 }
 
-// Resolves an actor by UUID.
 async function resolveActorFromTargetUuid(runtime, uuid) {
     if (runtime.actorCache.has(uuid)) return runtime.actorCache.get(uuid);
 
@@ -773,7 +683,6 @@ async function resolveActorFromTargetUuid(runtime, uuid) {
     return null;
 }
 
-// Resolves the message item.
 async function resolveItem(runtime, message) {
     if (message.item) return message.item;
     if (message.id && runtime.itemCache.has(message.id)) return runtime.itemCache.get(message.id);
@@ -800,22 +709,7 @@ async function resolveItem(runtime, message) {
     return null;
 }
 
-    return {
-        autoRollTargetChecks,
-        getToolbeltData,
-        hasToolbeltSaveData,
-        processMessage
-    };
-})();
 
-const {
-    autoRollTargetChecks,
-    getToolbeltData,
-    hasToolbeltSaveData,
-    processMessage
-} = targetAutomation;
-
-const damageRuntime = (() => {
 async function createDamageMessage(_runtime, sourceMessage, item, job, applications) {
     const DamageRoll = CONFIG.Dice.rolls.find((RollClass) => RollClass.name === "DamageRoll");
     if (!DamageRoll) throw new Error("PF2e DamageRoll class not found.");
@@ -824,7 +718,7 @@ async function createDamageMessage(_runtime, sourceMessage, item, job, applicati
     const token = sourceMessage.token ?? actor?.getActiveTokens?.(true, true)?.at(0)?.document ?? null;
     const formula = `${job.damage.formula}[${job.damage.damageType}]`;
     const roll = await new DamageRoll(formula, { actor, item }).evaluate();
-    const toolbeltData = targetAutomation.getToolbeltData(sourceMessage) ?? {};
+    const toolbeltData = getToolbeltData(sourceMessage) ?? {};
     const targets = applications.map((application) => application.uuid);
     const traits = Array.from(new Set([...(job.damage.traits ?? []), ...(item.system?.traits?.value ?? [])].filter(Boolean)));
     const targetHelper = {
@@ -881,7 +775,7 @@ async function createDamageMessage(_runtime, sourceMessage, item, job, applicati
     };
 
     return roll.toMessage({
-        flavor: damageAutomation.createDamageFlavor(item, traits),
+        flavor: createDamageFlavor(item, traits),
         speaker,
         flags
     });
@@ -963,34 +857,17 @@ async function resolveTokenFromTargetUuid(uuid) {
 }
 
 async function markToolbeltDamageApplied(runtime, message, application, token, rollIndex) {
-    const targetId = application.id ?? token?.id ?? runtime.getTargetIdFromUuid(application.uuid);
+    const targetId = application.id ?? token?.id ?? getTargetIdFromUuid(application.uuid);
     if (!targetId) return;
 
-    const data = foundry.utils.deepClone(targetAutomation.getToolbeltData(message) ?? {});
+    const data = foundry.utils.deepClone(getToolbeltData(message) ?? {});
     data.applied ??= {};
     data.applied[targetId] ??= {};
     data.applied[targetId][rollIndex] = true;
     await message.update({ [`flags.${TOOLBELT_ID}.targetHelper`]: data });
 }
 
-    return {
-        applyDamageToTarget,
-        createDamageMessage,
-        getActorHpSnapshot,
-        markToolbeltDamageApplied,
-        resolveTokenFromTargetUuid
-    };
-})();
 
-const {
-    applyDamageToTarget,
-    createDamageMessage,
-    getActorHpSnapshot,
-    markToolbeltDamageApplied,
-    resolveTokenFromTargetUuid
-} = damageRuntime;
-
-const damageApplication = (() => {
 const APPLY_DAMAGE_SELECTOR = "[data-action=\"target-applyDamage\"]";
 const DAMAGE_APPLY_DELAYS = [0, 40, 120, 300, 700, 1400];
 const DAMAGE_CLICK_PAUSE = 120;
@@ -998,10 +875,10 @@ const DAMAGE_CLAIM_STALE_MS = 10000;
 const DAMAGE_LOCK_CONFIRM_PAUSE = 60;
 
 function scheduleApplyDamageMessage(runtime, damageMessage, applications) {
-    const uniqueApplications = damageAutomation.getUniqueDamageApplications(applications)
+    const uniqueApplications = getUniqueDamageApplications(applications)
         .map((application) => ({
             ...application,
-            globalKey: damageAutomation.createGlobalDamageApplicationKey(damageMessage, application)
+            globalKey: createGlobalDamageApplicationKey(damageMessage, application)
         }));
 
     if (uniqueApplications.length === 0) return;
@@ -1074,7 +951,7 @@ async function applyPendingDamageMessage(runtime, messageId, root = null) {
         DamageDebug.applyPendingStart(messageId, claimedApplications, buttonIndex);
         const remaining = [];
         for (const application of claimedApplications) {
-            const clickKey = damageAutomation.getDamageApplicationClickKey(runtime, messageId, application);
+            const clickKey = getDamageApplicationClickKey(runtime, messageId, application);
             if (runtime.damageApplicationClicks.has(clickKey)) {
                 DamageDebug.skipClickAlreadyClaimed(messageId, clickKey, application);
                 continue;
@@ -1085,15 +962,15 @@ async function applyPendingDamageMessage(runtime, messageId, root = null) {
             const rollIndex = button ? getDamageRollIndex(button) : 0;
             if (isToolbeltDamageAlreadyApplied(runtime, damageMessage, application, rollIndex)) {
                 runtime.damageApplicationClicks.add(clickKey);
-                DamageDebug.skipClickToolbeltApplied(messageId, clickKey, application, targetAutomation.getToolbeltData(damageMessage)?.applied);
+                DamageDebug.skipClickToolbeltApplied(messageId, clickKey, application, getToolbeltData(damageMessage)?.applied);
                 continue;
             }
 
             runtime.damageApplicationClicks.add(clickKey);
             if (button) markDamageButtonsClaimed(messageId, application, button);
-            else DamageDebug.buttonNotFound(messageId, application, damageAutomation.getDamageApplyButtonKey(application.uuid, application.multiplier));
+            else DamageDebug.buttonNotFound(messageId, application, getDamageApplyButtonKey(application.uuid, application.multiplier));
 
-            const applied = await damageRuntime.applyDamageToTarget(runtime, damageMessage, application, rollIndex);
+            const applied = await applyDamageToTarget(runtime, damageMessage, application, rollIndex);
             DamageDebug.confirmClickApplied(messageId, clickKey, application, applied);
             if (!applied) {
                 await releaseDamageApplicationClaim(runtime, messageId, clickKey);
@@ -1127,7 +1004,7 @@ function getDamageApplyButtonIndex(root) {
 
         for (const button of container.querySelectorAll(APPLY_DAMAGE_SELECTOR)) {
             if (!(button instanceof HTMLElement)) continue;
-            const key = damageAutomation.getDamageApplyButtonKey(targetUuid, button.dataset?.multiplier);
+            const key = getDamageApplyButtonKey(targetUuid, button.dataset?.multiplier);
             if (!index.has(key)) index.set(key, []);
             index.get(key).push(button);
         }
@@ -1137,7 +1014,7 @@ function getDamageApplyButtonIndex(root) {
 }
 
 function findApplyDamageButton(buttonIndex, targetUuid, multiplier) {
-    const buttons = buttonIndex.get(damageAutomation.getDamageApplyButtonKey(targetUuid, multiplier)) ?? [];
+    const buttons = buttonIndex.get(getDamageApplyButtonKey(targetUuid, multiplier)) ?? [];
     return buttons.find((button) => (
         button.isConnected &&
         button.dataset.inlinebuilderDamageApplied !== "true" &&
@@ -1146,8 +1023,8 @@ function findApplyDamageButton(buttonIndex, targetUuid, multiplier) {
 }
 
 function isToolbeltDamageAlreadyApplied(runtime, message, application, rollIndexOrButton = 0) {
-    const data = message ? targetAutomation.getToolbeltData(message) : null;
-    const targetId = application.id ?? runtime.getTargetIdFromUuid(application.uuid);
+    const data = message ? getToolbeltData(message) : null;
+    const targetId = application.id ?? getTargetIdFromUuid(application.uuid);
     const rollIndex = rollIndexOrButton instanceof HTMLElement ? getDamageRollIndex(rollIndexOrButton) : Number(rollIndexOrButton ?? 0);
     return !!(targetId && data?.applied?.[targetId]?.[rollIndex]);
 }
@@ -1200,7 +1077,7 @@ async function claimPendingDamageApplications(runtime, messageId, applications) 
     let changed = false;
 
     for (const application of applications) {
-        const key = damageAutomation.getDamageApplicationClickKey(runtime, messageId, application);
+        const key = getDamageApplicationClickKey(runtime, messageId, application);
         const existing = claims[key];
         if (existing?.status === "applied") {
             runtime.damageApplicationClicks.add(key);
@@ -1289,46 +1166,11 @@ function getDamageRollIndex(button) {
     return Number(container?.dataset?.targetRollIndex ?? 0);
 }
 
-    return {
-        applyPendingDamageMessage,
-        claimDamageMessageApplyLock,
-        claimPendingDamageApplications,
-        completeDamageApplicationClaim,
-        completeDamageMessageApplyLock,
-        findApplyDamageButton,
-        getDamageApplicationClaims,
-        getDamageApplyButtonIndex,
-        getDamageRollIndex,
-        isToolbeltDamageAlreadyApplied,
-        markDamageButtonsClaimed,
-        releaseDamageApplicationClaim,
-        runDamageApplyLoop,
-        scheduleApplyDamageMessage,
-        scheduleDamageApply,
-        setDamageApplicationClaims,
-        updateDamageApplicationClaim
-    };
-})();
+function getTargetIdFromUuid(uuid) {
+    if (typeof uuid !== "string") return null;
+    return uuid.split(".").at(-1) || null;
+}
 
-const {
-    applyPendingDamageMessage,
-    claimDamageMessageApplyLock,
-    claimPendingDamageApplications,
-    completeDamageApplicationClaim,
-    completeDamageMessageApplyLock,
-    findApplyDamageButton,
-    getDamageApplicationClaims,
-    getDamageApplyButtonIndex,
-    getDamageRollIndex,
-    isToolbeltDamageAlreadyApplied,
-    markDamageButtonsClaimed,
-    releaseDamageApplicationClaim,
-    runDamageApplyLoop,
-    scheduleApplyDamageMessage,
-    scheduleDamageApply,
-    setDamageApplicationClaims,
-    updateDamageApplicationClaim
-} = damageApplication;
 
 const AUTO_ROLL_DELAYS = [0, 90, 220, 520];
 const PROCESS_DELAYS = [60, 180, 420, 900, 1600];
@@ -1398,14 +1240,14 @@ class InlineAutomations {
         this.rememberMessageRoot(message.id, root);
         DamageDebug.renderMessage(message, root, this.pendingDamageApplications.has(message.id));
         if (this.pendingDamageApplications.has(message.id)) {
-            this.scheduleDamageApply(message.id);
+            scheduleDamageApply(this, message.id);
         }
         return true;
     }
 
     queueMessage(message, root = null) {
         if (!message?.id || !this.canUseToolbeltTargetHelper()) return;
-        if (this.isDamageRollMessage(message) || !targetAutomation.hasToolbeltSaveData(message)) return;
+        if (this.isDamageRollMessage(message) || !hasToolbeltSaveData(message)) return;
 
         this.rememberMessageRoot(message.id, root);
         this.scheduleAutoRoll(message, root);
@@ -1415,14 +1257,14 @@ class InlineAutomations {
     scheduleAutoRoll(message, root = null) {
         this.scheduleMessageTimers(this.autoRollTimers, message, root, AUTO_ROLL_DELAYS, () => {
             const currentMessage = game.messages.get(message.id) ?? message;
-            void targetAutomation.autoRollTargetChecks(this, currentMessage, this.getQueuedMessageRoot(message.id, root));
+            void autoRollTargetChecks(this, currentMessage, this.getQueuedMessageRoot(message.id, root));
         });
     }
 
     scheduleProcess(message, root = null, delays = PROCESS_DELAYS) {
         this.scheduleMessageTimers(this.processTimers, message, root, delays, () => {
             const currentMessage = game.messages.get(message.id) ?? message;
-            void targetAutomation.processMessage(this, currentMessage, this.getQueuedMessageRoot(message.id, root));
+            void processMessage(this, currentMessage, this.getQueuedMessageRoot(message.id, root));
         });
     }
 
@@ -1475,7 +1317,7 @@ class InlineAutomations {
             return false;
         }
 
-        const descriptionProfile = profile ?? profileAutomation.getDescriptionProfile(this, item);
+        const descriptionProfile = profile ?? getDescriptionProfile(this, item);
         if (!descriptionProfile.description || targets.length === 0) return false;
 
         const currentMessage = game.messages.get(sourceMessage.id) ?? sourceMessage;
@@ -1486,7 +1328,7 @@ class InlineAutomations {
         }
 
         const { processedDamage, processedDamageJobs } = this.getProcessedDamageFlags(currentMessage);
-        const jobs = damageAutomation.getDamageJobs(targets, descriptionProfile);
+        const jobs = getDamageJobs(targets, descriptionProfile);
         DamageDebug.evaluateJobs(currentMessage, targets, jobs, processedDamage, processedDamageJobs);
         if (jobs.length === 0) {
             await this.completePotentialDamageAutomation(currentMessage, descriptionProfile, processedDamage, processedDamageJobs);
@@ -1509,7 +1351,7 @@ class InlineAutomations {
             }
 
             this.markRunnableDamageJobsProcessed(runnableJobs, processedDamage, processedDamageJobs);
-            await damageAutomation.completeDamageAutomation(this, currentMessage, processedDamage, processedDamageJobs);
+            await completeDamageAutomation(this, currentMessage, processedDamage, processedDamageJobs);
 
             for (const job of runnableJobs) {
                 rolled = await this.rollDamageJob(currentMessage, item, job) || rolled;
@@ -1524,7 +1366,7 @@ class InlineAutomations {
     async rollDamageJob(currentMessage, item, job) {
         try {
             DamageDebug.createMessageStart(currentMessage, job);
-            const damageMessage = await this.createDamageMessage(currentMessage, item, job, job.applications);
+            const damageMessage = await createDamageMessage(this, currentMessage, item, job, job.applications);
             if (!damageMessage?.id) {
                 DamageDebug.createMessageEmpty(currentMessage, job);
                 return false;
@@ -1533,7 +1375,7 @@ class InlineAutomations {
             this.damageJobMessages.set(job.jobId, damageMessage.id);
             this.trimMap(this.damageJobMessages, 300);
             DamageDebug.createMessageComplete(currentMessage, damageMessage, job);
-            this.scheduleApplyDamageMessage(damageMessage, job.applications);
+            scheduleApplyDamageMessage(this, damageMessage, job.applications);
             return true;
         } catch (error) {
             console.error(`[${MODULE_ID}] Automatic damage roll failed:`, error);
@@ -1551,8 +1393,8 @@ class InlineAutomations {
     }
 
     async completePotentialDamageAutomation(message, profile, processedDamage, processedDamageJobs) {
-        if (damageAutomation.hasPotentialDamageAutomation(message, profile)) {
-            await damageAutomation.completeDamageAutomation(this, message, processedDamage, processedDamageJobs);
+        if (hasPotentialDamageAutomation(message, profile)) {
+            await completeDamageAutomation(this, message, processedDamage, processedDamageJobs);
         }
     }
 
@@ -1561,12 +1403,12 @@ class InlineAutomations {
 
         for (const job of jobs) {
             const applications = job.applications.filter((application) => this.canRunDamageApplication(message, job, application, processedDamage));
-            const uniqueApplications = damageAutomation.getUniqueDamageApplications(applications);
+            const uniqueApplications = getUniqueDamageApplications(applications);
             if (uniqueApplications.length === 0) continue;
 
-            const keys = uniqueApplications.map((application) => damageAutomation.createDamageProcessedKey(message, application, job.signature));
-            const jobId = damageAutomation.createDamageJobId(message, job, uniqueApplications);
-            const blockedReason = damageAutomation.getDamageJobBlockedReason(this, message.id, jobId, processedDamageJobs);
+            const keys = uniqueApplications.map((application) => createDamageProcessedKey(message, application, job.signature));
+            const jobId = createDamageJobId(message, job, uniqueApplications);
+            const blockedReason = getDamageJobBlockedReason(this, message.id, jobId, processedDamageJobs);
             DamageDebug.candidateJob(message, { ...job, jobId }, applications, uniqueApplications, keys, blockedReason);
             if (blockedReason) continue;
 
@@ -1580,7 +1422,7 @@ class InlineAutomations {
 
     canRunDamageApplication(message, job, application, processedDamage) {
         if (!application.uuid || !application.outcome) return false;
-        const key = damageAutomation.createDamageProcessedKey(message, application, job.signature);
+        const key = createDamageProcessedKey(message, application, job.signature);
         return !processedDamage[key] && !this.damageInProgress.has(key) && !this.damageCompletedKeys.has(key);
     }
 
@@ -1611,103 +1453,6 @@ class InlineAutomations {
         ));
     }
 
-    createDamageMessage(sourceMessage, item, job, applications) {
-        return damageRuntime.createDamageMessage(this, sourceMessage, item, job, applications);
-    }
-
-    scheduleApplyDamageMessage(damageMessage, applications) {
-        damageApplication.scheduleApplyDamageMessage(this, damageMessage, applications);
-    }
-
-    scheduleDamageApply(messageId, delays) {
-        damageApplication.scheduleDamageApply(this, messageId, delays);
-    }
-
-    runDamageApplyLoop(messageId, delays) {
-        return damageApplication.runDamageApplyLoop(this, messageId, delays);
-    }
-
-    applyPendingDamageMessage(messageId, root = null) {
-        return damageApplication.applyPendingDamageMessage(this, messageId, root);
-    }
-
-    getDamageApplyButtonIndex(root) {
-        return damageApplication.getDamageApplyButtonIndex(root);
-    }
-
-    findApplyDamageButton(buttonIndex, targetUuid, multiplier) {
-        return damageApplication.findApplyDamageButton(buttonIndex, targetUuid, multiplier);
-    }
-
-    isToolbeltDamageAlreadyApplied(message, application, rollIndexOrButton = 0) {
-        return damageApplication.isToolbeltDamageAlreadyApplied(this, message, application, rollIndexOrButton);
-    }
-
-    claimDamageMessageApplyLock(messageId) {
-        return damageApplication.claimDamageMessageApplyLock(this, messageId);
-    }
-
-    completeDamageMessageApplyLock(messageId, lock) {
-        return damageApplication.completeDamageMessageApplyLock(messageId, lock);
-    }
-
-    claimPendingDamageApplications(messageId, applications) {
-        return damageApplication.claimPendingDamageApplications(this, messageId, applications);
-    }
-
-    completeDamageApplicationClaim(messageId, key) {
-        return damageApplication.completeDamageApplicationClaim(this, messageId, key);
-    }
-
-    releaseDamageApplicationClaim(messageId, key) {
-        return damageApplication.releaseDamageApplicationClaim(this, messageId, key);
-    }
-
-    updateDamageApplicationClaim(messageId, key, update) {
-        return damageApplication.updateDamageApplicationClaim(this, messageId, key, update);
-    }
-
-    getDamageApplicationClaims(message) {
-        return damageApplication.getDamageApplicationClaims(message);
-    }
-
-    setDamageApplicationClaims(message, claims) {
-        return damageApplication.setDamageApplicationClaims(message, claims);
-    }
-
-    applyDamageToTarget(message, application, rollIndex = 0) {
-        return damageRuntime.applyDamageToTarget(this, message, application, rollIndex);
-    }
-
-    getActorHpSnapshot(actor) {
-        return damageRuntime.getActorHpSnapshot(actor);
-    }
-
-    resolveTokenFromTargetUuid(uuid) {
-        return damageRuntime.resolveTokenFromTargetUuid(uuid);
-    }
-
-    markToolbeltDamageApplied(message, application, token, rollIndex) {
-        return damageRuntime.markToolbeltDamageApplied(this, message, application, token, rollIndex);
-    }
-
-    markDamageButtonsClaimed(messageId, application, button) {
-        damageApplication.markDamageButtonsClaimed(messageId, application, button);
-    }
-
-    getDamageRollIndex(button) {
-        return damageApplication.getDamageRollIndex(button);
-    }
-
-    getDamageApplyButtonKey(targetUuid, multiplier) {
-        return damageAutomation.getDamageApplyButtonKey(targetUuid, multiplier);
-    }
-
-    getTargetIdFromUuid(uuid) {
-        if (typeof uuid !== "string") return null;
-        return uuid.split(".").at(-1) || null;
-    }
-
     isAutomaticDamageMessage(message) {
         return message?.getFlag?.(MODULE_ID, "automaticDamage") === true || message?.flags?.[MODULE_ID]?.automaticDamage === true;
     }
@@ -1715,7 +1460,7 @@ class InlineAutomations {
     isDamageRollMessage(message) {
         return (
             this.isAutomaticDamageMessage(message) ||
-            targetAutomation.getToolbeltData(message)?.type === "damage" ||
+            getToolbeltData(message)?.type === "damage" ||
             message?.flags?.pf2e?.context?.type === "damage-roll"
         );
     }
@@ -1776,7 +1521,7 @@ function initializeModule() {
     exposeInlineBuilderApi();
 
     Hooks.once("init", () => {
-        registerModuleSettings();
+        registerDebugSettings();
         registerModuleHooks(registerAutomationHooks);
     });
 }

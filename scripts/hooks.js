@@ -1,18 +1,60 @@
 import { MODULE_ID, localize } from "./config.js";
 import {
-    DAMAGE_TABLES,
+    convertAutomationHtmlToShortText,
+    convertAutomationText,
     DAMAGE_TYPES,
-    DC_TABLE,
     PF2E_CONDITIONS,
     PF2E_CONDITION_MAP,
     PF2E_CONDITION_SET,
-    TEMPLATE_CONFIG,
     VALUED_CONDITION_SET
-} from "./data/tables.js";
-import { convertAutomationHtmlToShortText, convertAutomationText } from "./utils.js";
+} from "./utils.js";
 
-const domHelpers = (() => {
-// Finds the editable area.
+const DAMAGE_TABLES = {
+    area: {
+        limited: { '-1': '1d6', 0: '1d10', 1: '2d6', 2: '3d6', 3: '4d6', 4: '5d6', 5: '6d6', 6: '7d6', 7: '8d6', 8: '9d6', 9: '10d6', 10: '11d6', 11: '12d6', 12: '13d6', 13: '14d6', 14: '15d6', 15: '16d6', 16: '17d6', 17: '18d6', 18: '19d6', 19: '20d6', 20: '21d6', 21: '22d6', 22: '23d6', 23: '24d6', 24: '25d6' },
+        unlimited: { '-1': '1d4', 0: '1d6', 1: '2d4', 2: '2d6', 3: '2d8', 4: '3d6', 5: '2d10', 6: '4d6', 7: '4d6', 8: '5d6', 9: '5d6', 10: '6d6', 11: '6d6', 12: '5d8', 13: '7d6', 14: '4d12', 15: '8d6', 16: '8d6', 17: '8d6', 18: '9d6', 19: '9d6', 20: '6d10', 21: '10d6', 22: '8d8', 23: '11d6', 24: '11d6' }
+    },
+    strike: {
+        extreme: { '-1': '1d6+1', 0: '1d6+3', 1: '1d8+4', 2: '1d12+4', 3: '1d12+8', 4: '2d10+7', 5: '2d12+7', 6: '2d12+10', 7: '2d12+12', 8: '2d12+15', 9: '2d12+17', 10: '2d12+20', 11: '2d12+22', 12: '3d12+19', 13: '3d12+21', 14: '3d12+24', 15: '3d12+26', 16: '3d12+29', 17: '3d12+31', 18: '3d12+34', 19: '4d12+29', 20: '4d12+32', 21: '4d12+34', 22: '4d12+37', 23: '4d12+39', 24: '4d12+42' },
+        high: { '-1': '1d4+1', 0: '1d6+2', 1: '1d6+3', 2: '1d10+4', 3: '1d10+6', 4: '2d8+5', 5: '2d8+7', 6: '2d8+9', 7: '2d10+9', 8: '2d10+11', 9: '2d10+13', 10: '2d12+13', 11: '2d12+15', 12: '3d10+14', 13: '3d10+16', 14: '3d10+18', 15: '3d12+17', 16: '3d12+18', 17: '3d12+19', 18: '3d12+20', 19: '4d10+20', 20: '4d10+22', 21: '4d10+24', 22: '4d10+26', 23: '4d12+24', 24: '4d12+26' },
+        moderate: { '-1': '1d4', 0: '1d4+2', 1: '1d6+2', 2: '1d8+4', 3: '1d8+6', 4: '2d6+5', 5: '2d6+6', 6: '2d6+8', 7: '2d8+8', 8: '2d8+9', 9: '2d8+11', 10: '2d10+11', 11: '2d10+12', 12: '3d8+12', 13: '3d8+14', 14: '3d8+15', 15: '3d10+14', 16: '3d10+15', 17: '3d10+16', 18: '3d10+17', 19: '4d8+17', 20: '4d8+19', 21: '4d8+20', 22: '4d8+22', 23: '4d10+20', 24: '4d10+22' },
+        low: { '-1': '1d4', 0: '1d4+1', 1: '1d4+2', 2: '1d6+3', 3: '1d6+5', 4: '2d4+4', 5: '2d4+6', 6: '2d4+7', 7: '2d6+6', 8: '2d6+8', 9: '2d6+9', 10: '2d6+10', 11: '2d8+10', 12: '3d6+10', 13: '3d6+11', 14: '3d6+13', 15: '3d6+14', 16: '3d6+15', 17: '3d6+16', 18: '3d6+17', 19: '4d6+14', 20: '4d6+15', 21: '4d6+17', 22: '4d6+18', 23: '4d6+19', 24: '4d6+21' }
+    }
+};
+
+const DC_TABLE = {
+    extreme: { '-1': 19, 0: 19, 1: 20, 2: 22, 3: 23, 4: 25, 5: 26, 6: 27, 7: 29, 8: 30, 9: 32, 10: 33, 11: 34, 12: 36, 13: 37, 14: 39, 15: 40, 16: 41, 17: 43, 18: 44, 19: 46, 20: 47, 21: 48, 22: 50, 23: 51, 24: 52 },
+    high: { '-1': 16, 0: 16, 1: 17, 2: 18, 3: 20, 4: 21, 5: 22, 6: 24, 7: 25, 8: 26, 9: 28, 10: 29, 11: 30, 12: 32, 13: 33, 14: 34, 15: 36, 16: 37, 17: 38, 18: 40, 19: 41, 20: 42, 21: 44, 22: 45, 23: 46, 24: 48 },
+    moderate: { '-1': 13, 0: 13, 1: 14, 2: 15, 3: 17, 4: 18, 5: 19, 6: 21, 7: 22, 8: 23, 9: 25, 10: 26, 11: 27, 12: 29, 13: 30, 14: 31, 15: 33, 16: 34, 17: 35, 18: 37, 19: 38, 20: 39, 21: 41, 22: 42, 23: 43, 24: 45 }
+};
+
+const TEMPLATE_CONFIG = {
+    types: [
+        { value: 'burst', icon: 'fa-circle', tooltipKey: 'templateTypes.burst' },
+        { value: 'cone', icon: 'fa-angle-left', tooltipKey: 'templateTypes.cone' },
+        { value: 'square', icon: 'fa-square', tooltipKey: 'templateTypes.square' },
+        { value: 'line', icon: 'fa-grip-lines', tooltipKey: 'templateTypes.line' }
+    ],
+    damageTypes: ['fire', 'cold', 'electricity', 'acid', 'sonic', 'force', 'mental', 'poison', 'bleed', 'spirit', 'vitality', 'void', 'bludgeoning', 'piercing', 'slashing'],
+    saveTypes: [
+        { value: 'fortitude', icon: 'fa-chess-rook', tooltipKey: 'saveTypes.fortitude' },
+        { value: 'reflex', icon: 'fa-person-running', tooltipKey: 'saveTypes.reflex' },
+        { value: 'will', icon: 'fa-brain', tooltipKey: 'saveTypes.will' }
+    ],
+    showDCOptions: [
+        { value: 'all', icon: 'fa-users', tooltipKey: 'showDCOptions.all' },
+        { value: 'owner', icon: 'fa-user', tooltipKey: 'showDCOptions.owner' },
+        { value: 'gm', icon: 'fa-crown', tooltipKey: 'showDCOptions.gm' },
+        { value: 'none', icon: 'fa-eye-slash', tooltipKey: 'showDCOptions.none' }
+    ],
+    traits: [
+        { value: 'area-damage', icon: 'fa-burst', tooltipKey: 'traits.areaDamage' },
+        { value: 'splash', icon: 'fa-droplet', tooltipKey: 'traits.splash' },
+        { value: 'persistent', icon: 'fa-clock', tooltipKey: 'traits.persistent' }
+    ]
+};
+
+
 function getEditorEditable(editorRef) {
   if (!editorRef) return null;
   if (editorRef.classList?.contains('ProseMirror') || editorRef.getAttribute?.('contenteditable') === 'true') return editorRef;
@@ -21,41 +63,34 @@ function getEditorEditable(editorRef) {
     ?? null;
 }
 
-// Reads an input value.
 function getInputValue(input) {
   return input?.value?.trim?.() ?? '';
 }
 
-// Sets an input value.
 function setInputValue(input, value) {
   if (!input) return;
   input.value = value;
   input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
-// Appends text to the input.
 function appendInputValue(input, value) {
   const current = getInputValue(input);
   setInputValue(input, current ? `${current} ${value}` : value);
 }
 
-// Clamps a number.
 function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-// Parses a value as integer.
 function parseInteger(value, fallback = 0) {
   const number = parseInt(value, 10);
   return Number.isFinite(number) ? number : fallback;
 }
 
-// Clamps a condition value.
 function clampConditionValue(value) {
   return clampNumber(parseInteger(value, 1), 1, 10);
 }
 
-// Normalizes a hook element.
 function getHookElement(html) {
   if (html instanceof Element || html instanceof DocumentFragment) return html;
   if (html?.[0] instanceof HTMLElement) return html[0];
@@ -63,7 +98,6 @@ function getHookElement(html) {
   return null;
 }
 
-// Finds the first editor divider.
 function findFirstEditorDivider(raw) {
   const htmlMatch = raw.match(/<hr[\s\S]*?\/?>/i);
   const dashMatch = raw.match(/>\s*---\s*</) || raw.match(/(^|\n)\s*---\s*(\n|$)/);
@@ -74,17 +108,14 @@ function findFirstEditorDivider(raw) {
   return { index: match.index, text: match[0], isDash: match === dashMatch };
 }
 
-// Finds HTML dividers.
 function findHtmlDividers(raw) {
   return [...String(raw ?? '').matchAll(/<hr[\s\S]*?\/?>/gi)];
 }
 
-// Finds the last HTML divider.
 function findLastHtmlDivider(raw) {
   return findHtmlDividers(raw).at(-1) ?? null;
 }
 
-// Escapes HTML text.
 function escapeHtml(text) {
   return String(text)
     .replace(/&/g, '&amp;')
@@ -92,7 +123,6 @@ function escapeHtml(text) {
     .replace(/>/g, '&gt;');
 }
 
-// Converts lines to paragraph HTML.
 function automationLinesToParagraphHtml(text, converter = line => line) {
   return String(text ?? '').split('\n').map(line => {
     const converted = converter(line);
@@ -106,25 +136,7 @@ function automationLinesToParagraphHtml(text, converter = line => line) {
   }).join('');
 }
 
-    return {
-        appendInputValue,
-        automationLinesToParagraphHtml,
-        clampConditionValue,
-        clampNumber,
-        findFirstEditorDivider,
-        findHtmlDividers,
-        findLastHtmlDivider,
-        getEditorEditable,
-        getHookElement,
-        getInputValue,
-        parseInteger,
-        setInputValue
-    };
-})();
 
-const { appendInputValue, automationLinesToParagraphHtml, clampConditionValue, clampNumber, findFirstEditorDivider, findHtmlDividers, findLastHtmlDivider, getEditorEditable, getHookElement, getInputValue, parseInteger, setInputValue } = domHelpers;
-
-const applicationHelpers = (() => {
 const foundryApplicationApi = globalThis.foundry?.applications?.api ?? {};
 const ApplicationV2 = foundryApplicationApi.ApplicationV2 ?? class {};
 const HandlebarsApplicationMixin = foundryApplicationApi.HandlebarsApplicationMixin ?? ((BaseApplication) => BaseApplication);
@@ -162,8 +174,6 @@ function registerInlineBuilderPartials() {
   }
 }
 
-registerInlineBuilderPartials();
-
 function getInlineBuilderDialogOptions({
   id,
   classes = [],
@@ -196,60 +206,19 @@ function getTemplatePart(template) {
   };
 }
 
-    return {
-        ApplicationV2,
-        HandlebarsApplicationMixin,
-        getInlineBuilderDialogOptions,
-        getTemplatePart
-    };
-})();
 
-const { ApplicationV2, HandlebarsApplicationMixin, getInlineBuilderDialogOptions, getTemplatePart } = applicationHelpers;
-
-const inlineBuilderState = (() => {
 let currentNpcActor = null;
-let activeInlineBuilderDialog = null;
 
-// Gets the current NPC.
-function getCurrentNpcActor() {
-  return currentNpcActor;
-}
-
-// Sets the current NPC.
 function setCurrentNpcActor(actor) {
   currentNpcActor = actor;
 }
 
-// Gets the sheet level.
 function getCreatureLevelFromSheet() {
   return currentNpcActor?.type === 'npc'
     ? currentNpcActor.system?.details?.level?.value ?? null
     : null;
 }
 
-// Sets the active dialog.
-function setActiveInlineBuilderDialog(dialog) {
-  activeInlineBuilderDialog = dialog;
-}
-
-// Clears the active dialog.
-function clearActiveInlineBuilderDialog(dialog) {
-  if (activeInlineBuilderDialog === dialog) activeInlineBuilderDialog = null;
-}
-
-    return {
-        clearActiveInlineBuilderDialog,
-        getCreatureLevelFromSheet,
-        getCurrentNpcActor,
-        setActiveInlineBuilderDialog,
-        setCurrentNpcActor
-    };
-})();
-
-const { clearActiveInlineBuilderDialog, getCreatureLevelFromSheet, getCurrentNpcActor, setActiveInlineBuilderDialog, setCurrentNpcActor } = inlineBuilderState;
-
-const conditionTags = (() => {
-// Reads condition tags.
 function parseConditionTags(text) {
   const conditions = new Map();
   if (!text) return conditions;
@@ -269,41 +238,26 @@ function parseConditionTags(text) {
   return conditions;
 }
 
-// Builds a condition tag.
 function getConditionTag(slug, value) {
   return VALUED_CONDITION_SET.has(slug) ? `{${slug} ${value}}` : `{${slug}}`;
 }
 
-// Builds the condition regex.
 function getConditionTagRegex(slug) {
   const valuePart = VALUED_CONDITION_SET.has(slug) ? '(?:\\s+\\d+)?' : '';
   return new RegExp(`\\{${slug}${valuePart}\\}`, 'i');
 }
 
-// Inserts or updates a condition.
 function upsertConditionTag(text, slug, value) {
   const tag = getConditionTag(slug, value);
   const regex = getConditionTagRegex(slug);
   return regex.test(text) ? text.replace(regex, tag) : [text, tag].filter(Boolean).join(' ');
 }
 
-// Removes a condition tag.
 function removeConditionTag(text, slug) {
   return text.replace(getConditionTagRegex(slug), '').replace(/\s+/g, ' ').trim();
 }
 
-    return {
-        getConditionTag,
-        getConditionTagRegex,
-        parseConditionTags,
-        removeConditionTag,
-        upsertConditionTag
-    };
-})();
 
-const { getConditionTag, getConditionTagRegex, parseConditionTags, removeConditionTag, upsertConditionTag } = conditionTags;
-
-const automationFields = (() => {
 const AUTOMATION_FIELDS = [
   ['sc', () => localize('automation.criticalSuccess', 'Critical Success:'), '#auto-sc', 'autoSc'],
   ['s', () => localize('automation.success', 'Success:'), '#auto-s', 'autoS'],
@@ -327,18 +281,7 @@ function getAutomationTemplateFields() {
 }));
 }
 
-    return {
-        AUTOMATION_FIELDS,
-        getAutomationFields,
-        getAutomationResultByLabel,
-        getAutomationTemplateFields
-    };
-})();
 
-const { AUTOMATION_FIELDS, getAutomationFields, getAutomationResultByLabel, getAutomationTemplateFields } = automationFields;
-
-const damageDialog = (() => {
-// Manual damage dialog.
 class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-damage-dialog',
@@ -354,14 +297,12 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static PARTS = getTemplatePart('damage-dialog');
 
-  // Initializes instance state.
   constructor(options = {}) {
     super(options);
     this.targetInput = options.targetInput ?? null;
     this.selectedMode = options.mode === 'persistent' ? 'persistent' : 'normal';
   }
 
-  // Prepares template data.
   async _prepareContext(_options) {
     return {
       damageTypes: DAMAGE_TYPES,
@@ -378,7 +319,6 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
-  // Adds damage to the field.
   static async addDamage(_event, _target) {
     const dialog = this;
     const html = dialog.element;
@@ -410,7 +350,6 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 }
 
-// Opens the damage dialog.
 function openDamageDialog(targetInput, mode = 'normal') {
   new DamageDialogV2({
     targetInput,
@@ -419,20 +358,12 @@ function openDamageDialog(targetInput, mode = 'normal') {
   }).render(true);
 }
 
-    return {
-        openDamageDialog
-    };
-})();
 
-const { openDamageDialog } = damageDialog;
-
-const conditionPicker = (() => {
 const CONDITION_LABEL_BY_SLUG = new Map(PF2E_CONDITIONS.map(slug => [
   slug,
   slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
 ]));
 
-// Condition picker dialog.
 class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-condition-picker',
@@ -449,7 +380,6 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
 
   static PARTS = getTemplatePart('condition-picker');
 
-  // Initializes instance state.
   constructor(options = {}) {
     super(options);
     this.targetInput = options.targetInput ?? null;
@@ -457,7 +387,6 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
     this.currentConditions = parseConditionTags(this.initialValue);
   }
 
-  // Prepares template data.
   async _prepareContext(_options) {
     const conditions = PF2E_CONDITIONS
       .map(slug => {
@@ -499,7 +428,6 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
     return { conditions };
   }
 
-  // Binds events after render.
   _onRender(context, options) {
     super._onRender(context, options);
     const html = this.element;
@@ -549,30 +477,25 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
     });
   }
 
-  // Updates the target condition.
   _updateConditionInTarget(slug, value) {
     this._setTargetValue(upsertConditionTag(getInputValue(this.targetInput), slug, value));
   }
 
-  // Removes the target condition.
   _removeConditionFromTarget(slug) {
     this._setTargetValue(removeConditionTag(getInputValue(this.targetInput), slug));
   }
 
-  // Updates the target value.
   _setTargetValue(value) {
     if (!this.targetInput) return;
     setInputValue(this.targetInput, value);
     this.initialValue = value;
   }
 
-  // Updates the card value.
   _setCardValue(target, value) {
     const valueInput = target.querySelector('.cond-value-input');
     if (valueInput) valueInput.value = value;
   }
 
-  // Selects a condition.
   static async selectCondition(_event, target) {
     const dialog = this;
 
@@ -597,7 +520,6 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
     dialog._updateConditionInTarget(slug, value);
   }
 
-  // Removes a condition.
   static async removeCondition(_event, target) {
     const dialog = this;
 
@@ -624,21 +546,12 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
   }
 }
 
-// Shows the condition picker.
 function showConditionPicker(targetInput) {
   const initialValue = getInputValue(targetInput);
   new ConditionPickerDialogV2({ targetInput, initialValue }).render(true);
 }
 
-    return {
-        showConditionPicker
-    };
-})();
 
-const { showConditionPicker } = conditionPicker;
-
-const comfortEdit = (() => {
-// Comfort edit dialog.
 class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-comfort-edit',
@@ -655,14 +568,12 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static PARTS = getTemplatePart('comfort-edit');
 
-  // Initializes instance state.
   constructor(options = {}) {
     super(options);
     this.initialValue = options.initialValue ?? '';
     this.callback = options.callback ?? null;
   }
 
-  // Prepares template data.
   async _prepareContext(_options) {
     return {
       content: this.initialValue,
@@ -673,7 +584,6 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
-  // Saves edited content.
   static async saveContent(_event, _target) {
     const dialog = this;
     const textarea = dialog.element.querySelector('textarea[name="content"]');
@@ -685,7 +595,6 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     dialog.close();
   }
 
-  // Adds a condition to text.
   static async addCondition(_event, _target) {
     const dialog = this;
     const textarea = dialog.element.querySelector('textarea[name="content"]');
@@ -696,7 +605,6 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 }
 
-// Opens comfort editing.
 async function showComfortEditDialog(targetInput) {
   const initialValue = getInputValue(targetInput);
 
@@ -709,14 +617,7 @@ async function showComfortEditDialog(targetInput) {
   });
 }
 
-    return {
-        showComfortEditDialog
-    };
-})();
 
-const { showComfortEditDialog } = comfortEdit;
-
-const suggestionDialogs = (() => {
 const DMG_SUGGEST_LEVEL_MIN = -1;
 const DMG_SUGGEST_LEVEL_MAX = 24;
 
@@ -745,24 +646,20 @@ function getIntensityOptions(values) {
   return values.map(value => ({ value, label: labels[value] ?? value }));
 }
 
-// Gets a value by level.
 function getLeveledTableValue(table, fallback) {
   const level = getCreatureLevelFromSheet();
   if (level === null) return fallback;
   return table[level] || table[String(level)] || fallback;
 }
 
-// Calculates initial suggested damage.
 function getDefaultDamageFormula() {
   return getLeveledTableValue(DAMAGE_TABLES.area.unlimited, '4d6');
 }
 
-// Calculates initial suggested DC.
 function getDefaultDC() {
   return getLeveledTableValue(DC_TABLE.moderate, '21');
 }
 
-// Opens a level-based dialog.
 function renderNpcLevelDialog(DialogClass, mapResult = result => result) {
   if (getCreatureLevelFromSheet() === null) {
     ui.notifications.warn(localize('warnings.noNpcSheet', 'No open NPC sheet found.'));
@@ -774,7 +671,6 @@ function renderNpcLevelDialog(DialogClass, mapResult = result => result) {
   });
 }
 
-// Adjusts the displayed level.
 function adjustDisplayedLevel(app, target, selector) {
   const delta = parseInteger(target.dataset.delta, 0);
   if (!delta) return;
@@ -784,7 +680,6 @@ function adjustDisplayedLevel(app, target, selector) {
   if (levelSpan) levelSpan.textContent = app.currentLevel;
 }
 
-// DC suggestion dialog.
 class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-dc-suggestion',
@@ -800,7 +695,6 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static PARTS = getTemplatePart('dc-suggestion');
 
-  // Initializes instance state.
   constructor(options = {}) {
     super(options);
     this.callback = options.callback ?? null;
@@ -808,7 +702,6 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     this.selectedIntensity = 'moderate';
   }
 
-  // Prepares template data.
   async _prepareContext(_options) {
     return {
       baseLevel: getCreatureLevelFromSheet() ?? 0,
@@ -819,12 +712,10 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
-  // Adjusts the dialog level.
   static async adjustLevel(_event, target) {
     adjustDisplayedLevel(this, target, '#dc-suggest-level');
   }
 
-  // Confirms the suggested DC.
   static async confirmDC(_event, target) {
     const app = this;
     const level = app.currentLevel;
@@ -842,7 +733,6 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 }
 
-// Damage suggestion dialog.
 class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-damage-suggestion',
@@ -861,7 +751,6 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
 
   static PARTS = getTemplatePart('damage-suggestion');
 
-  // Initializes instance state.
   constructor(options = {}) {
     super(options);
     this.currentStep = 1;
@@ -872,7 +761,6 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     this.callback = options.callback ?? null;
   }
 
-  // Prepares template data.
   async _prepareContext(_options) {
     return {
       baseLevel: this.baseLevel,
@@ -886,7 +774,6 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     };
   }
 
-  // Selects the damage type.
   static async selectType(_event, target) {
     const type = target.dataset.type;
     if (!type) return;
@@ -898,7 +785,6 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     this.render(true);
   }
 
-  // Selects the damage subtype.
   static async selectSub(_event, target) {
     const sub = target.dataset.sub;
     if (!sub) return;
@@ -907,12 +793,10 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     await DamageSuggestionDialogV2.confirmDamage.call(this, null, target);
   }
 
-  // Adjusts the dialog level.
   static async adjustLevel(_event, target) {
     adjustDisplayedLevel(this, target, '#dmg-suggest-level');
   }
 
-  // Confirms the suggested damage.
   static async confirmDamage(_event, _target) {
     if (!this.selectedType || !this.selectedSub) {
       ui.notifications.warn(localize('warnings.damageTypeIntensityRequired', 'Please select a damage type and intensity.'));
@@ -938,7 +822,6 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     await this.close();
   }
 
-  // Closes the dialog.
   static async closeDialog(_event, _target) {
     if (this.callback) {
       this.callback(null);
@@ -948,48 +831,32 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
   }
 }
 
-// Shows the DC suggestion.
 async function showDCSuggestionDialog() {
   return renderNpcLevelDialog(DCSuggestionDialogV2, result => result?.dc ?? null);
 }
 
-// Shows the damage suggestion.
 async function showDamageSuggestionDialog() {
   return renderNpcLevelDialog(DamageSuggestionDialogV2);
 }
 
-    return {
-        getDefaultDamageFormula,
-        getDefaultDC,
-        showDamageSuggestionDialog,
-        showDCSuggestionDialog
-    };
-})();
 
-const { getDefaultDamageFormula, getDefaultDC, showDamageSuggestionDialog, showDCSuggestionDialog } = suggestionDialogs;
-
-const descriptionLines = (() => {
-// Generates the template line.
 function generateTemplateString(type, distance) {
   if (!type || !distance) return null;
   return `@Template[type:${type}|distance:${distance}]`;
 }
 
-// Generates the damage line.
 function generateDamageString(formula, damageType, traits = []) {
   if (!formula || !damageType) return null;
   const traitsPart = traits.length > 0 ? `|traits:${traits.join(',')}` : '';
   return `@Damage[${formula}[${damageType}]${traitsPart}]`;
 }
 
-// Generates the save line.
 function generateCheckString(saveType, dc, basic = true, showDC = 'all') {
   if (!saveType || !dc) return null;
   const basicPart = basic ? '|basic:true' : '';
   return `@Check[type:${saveType}|dc:${dc}${basicPart}|showDC:${showDC}]`;
 }
 
-// Reads the existing description block.
 function parseDescriptionBlock(text) {
   const out = { template: null, check: null, damage: null };
   if (!text) return out;
@@ -1028,18 +895,7 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-    return {
-        generateCheckString,
-        generateDamageString,
-        generateTemplateString,
-        parseDescriptionBlock
-    };
-})();
 
-const { generateCheckString, generateDamageString, generateTemplateString, parseDescriptionBlock } = descriptionLines;
-
-const automationEditor = (() => {
-// Detects existing automations.
 function detectExistingAutomations(editorRef) {
   const result = { sc: '', s: '', f: '', fc: '' };
   const automationResultByLabel = getAutomationResultByLabel();
@@ -1065,7 +921,6 @@ function detectExistingAutomations(editorRef) {
   return result;
 }
 
-// Applies automations to the editor.
 function applyAutomationToEditorContent(editorRef, applyText, silent = false) {
   const editable = getEditorEditable(editorRef);
   if (!editable) return false;
@@ -1094,15 +949,7 @@ function applyAutomationToEditorContent(editorRef, applyText, silent = false) {
   return true;
 }
 
-    return {
-        applyAutomationToEditorContent,
-        detectExistingAutomations
-    };
-})();
 
-const { applyAutomationToEditorContent, detectExistingAutomations } = automationEditor;
-
-const inlineBuilderDialog = (() => {
 function localizeOption(option) {
   const fallback = option.tooltip ?? option.value;
   return { ...option, tooltip: option.tooltipKey ? localize(option.tooltipKey, fallback) : fallback };
@@ -1145,7 +992,6 @@ function getInlineBuilderLabels() {
   };
 }
 
-// Main Inline Builder dialog.
 class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-dialog',
@@ -1168,19 +1014,11 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   selectedShowDC = 'all';
   selectedTraits = new Set();
 
-  // Initializes instance state.
   constructor(options = {}) {
     super(options);
     this.editorRef = options.editorRef ?? null;
   }
 
-  // Clears state on close.
-  async _onClose(options) {
-    await super._onClose?.(options);
-    clearActiveInlineBuilderDialog(this);
-  }
-
-  // Prepares template data.
   async _prepareContext(_options) {
     return {
       labels: getInlineBuilderLabels(),
@@ -1196,7 +1034,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
-  // Fits the dialog height.
   _fitToContent() {
     if (!this.element) return;
     this.element.style.width = '520px';
@@ -1206,7 +1043,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     content?.style.removeProperty('max-height');
   }
 
-  // Binds events after render.
   _onRender(context, options) {
     super._onRender(context, options);
     this._bindSectionToggles();
@@ -1217,27 +1053,23 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     this._fitToContent();
   }
 
-  // Sets a field value.
   _setInput(selector, value) {
     const input = this.element.querySelector(selector);
     if (input) input.value = value;
   }
 
-  // Shows a section.
   _showSection(section) {
     this.activeSections.add(section);
     this.element.querySelector(`.inlinebuilder-toggle[data-section="${section}"]`)?.classList.add('active');
     this.element.querySelector(`fieldset[data-section="${section}"]`)?.style.setProperty('display', 'block');
   }
 
-  // Hides a section.
   _hideSection(section) {
     this.activeSections.delete(section);
     this.element.querySelector(`.inlinebuilder-toggle[data-section="${section}"]`)?.classList.remove('active');
     this.element.querySelector(`fieldset[data-section="${section}"]`)?.style.setProperty('display', 'none');
   }
 
-  // Syncs the basic save.
   _syncBasicSaveState() {
     const basicSaveInput = this.element.querySelector('#basic-save');
     if (!basicSaveInput) return;
@@ -1247,7 +1079,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     basicSaveInput.disabled = !damageActive;
   }
 
-  // Binds section toggles.
   _bindSectionToggles() {
     this.element.querySelectorAll('.inlinebuilder-toggle').forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1270,7 +1101,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
-  // Binds segmented buttons.
   _bindSegment(selector, setter) {
     this.element.querySelectorAll(selector).forEach(btn => {
       btn.addEventListener('click', (e) => {
@@ -1282,7 +1112,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
-  // Binds form segments.
   _bindSegmentButtons() {
     this._bindSegment('.template-type-btn', value => { this.selectedTemplateType = value; });
     this._bindSegment('.save-type-btn', value => { this.selectedSaveType = value; });
@@ -1303,7 +1132,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
-  // Binds auxiliary buttons.
   _bindAuxiliaryButtons() {
     const distanceInput = this.element.querySelector('#template-distance');
     const adjustDistance = (event, delta) => {
@@ -1350,7 +1178,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     });
   }
 
-  // Hydrates data from the editor.
   _hydrateFromEditor() {
     if (!this.editorRef) return;
 
@@ -1393,7 +1220,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   }
 
-  // Reads content above the first divider.
   static _getContentAboveFirstHR(editorRef) {
     const editable = getEditorEditable(editorRef);
     if (!editable) return '';
@@ -1406,7 +1232,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     return (div.textContent || div.innerText || '').trim();
   }
 
-  // Applies content to the editor.
   static _applyToEditorContent(editorRef, applyText) {
     const editable = getEditorEditable(editorRef);
     if (!editable) { return false; }
@@ -1422,7 +1247,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     return true;
   }
 
-  // Inserts all generated lines.
   static insertAll(_event, target) {
     const app = this;
     const form = target.closest('.inlinebuilder-content');
@@ -1513,25 +1337,14 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 }
 
-// Opens the main dialog.
 function openInlineBuilderDialog(editorRef = null) {
-  const dialog = new InlineBuilderDialog({ editorRef });
-  setActiveInlineBuilderDialog(dialog);
-  dialog.render(true);
+  new InlineBuilderDialog({ editorRef }).render(true);
 }
 
-    return {
-        openInlineBuilderDialog
-    };
-})();
 
-const { openInlineBuilderDialog } = inlineBuilderDialog;
-
-const editorInjection = (() => {
 let editorInjectionFrame = null;
 const pendingEditorInjectionRoots = new Set();
 
-// Schedules editor injection.
 function queueInlineBuilderEditorInjection(root) {
   const element = getHookElement(root) ?? root;
   if (!(element instanceof Element || element instanceof DocumentFragment)) return;
@@ -1547,7 +1360,6 @@ function queueInlineBuilderEditorInjection(root) {
   });
 }
 
-// Injects the editor button.
 function injectInlineBuilderEditorButton(container) {
   const root = getHookElement(container) ?? container;
   if (!root) return;
@@ -1588,22 +1400,13 @@ function injectInlineBuilderEditorButton(container) {
   });
 }
 
-// Validates button visibility.
 function canShowInlineBuilderEditorButton(editor) {
   if (!(editor instanceof HTMLElement)) return false;
   if (editor.closest('#chat, #chat-form, #chat-controls, #chat-log, #sidebar, .chat-sidebar')) return false;
   return !!editor.querySelector('.ProseMirror[contenteditable]:not([contenteditable="false"]), [contenteditable]:not([contenteditable="false"])');
 }
 
-    return {
-        queueInlineBuilderEditorInjection
-    };
-})();
 
-const { queueInlineBuilderEditorInjection } = editorInjection;
-
-const inlineBuilderHooks = (() => {
-// Processes a rendered sheet.
 function handleRenderedSheet(app, html) {
   if (app.actor?.type === 'npc') setCurrentNpcActor(app.actor);
   setTimeout(() => {
@@ -1611,7 +1414,6 @@ function handleRenderedSheet(app, html) {
   }, 150);
 }
 
-// Registers Inline Builder hooks.
 function registerInlineBuilderHooks() {
   Hooks.on('renderActorSheet', handleRenderedSheet);
   Hooks.on('renderItemSheet', handleRenderedSheet);
@@ -1635,11 +1437,10 @@ function registerInlineBuilderHooks() {
       attributes: true,
       attributeFilter: ['contenteditable']
     });
-    game.inlinebuilder = { open: openInlineBuilderDialog, version: '1.0.25' };
+    game.inlinebuilder = { open: openInlineBuilderDialog };
   });
 }
 
-// Registers the Inline Builder shortcut.
 function registerInlineBuilderKeybinding() {
   game.keybindings.register(MODULE_ID, 'openDialog', {
     name: localize('keybindings.openDialog.name', 'Open Inline Builder'),
@@ -1654,14 +1455,6 @@ function registerInlineBuilderKeybinding() {
   });
 }
 
-    return {
-        openInlineBuilderDialog,
-        registerInlineBuilderHooks,
-        registerInlineBuilderKeybinding
-    };
-})();
-
-const { registerInlineBuilderHooks, registerInlineBuilderKeybinding } = inlineBuilderHooks;
 
 function exposeInlineBuilderApi() {
     window.openInlineBuilder = openInlineBuilderDialog;
