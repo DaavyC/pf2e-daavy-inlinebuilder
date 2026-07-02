@@ -199,12 +199,11 @@ function getInlineBuilderDialogOptions({
   };
 }
 
-function getTemplatePart(template) {
-  registerInlineBuilderPartials();
-  return {
-    form: { template: `modules/${MODULE_ID}/templates/${template}.hbs` }
-  };
-}
+registerInlineBuilderPartials();
+
+const MAIN_TEMPLATE_PART = {
+  form: { template: `modules/${MODULE_ID}/templates/main.hbs` }
+};
 
 
 let currentNpcActor = null;
@@ -295,7 +294,7 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   });
 
-  static PARTS = getTemplatePart('damage-dialog');
+  static PARTS = MAIN_TEMPLATE_PART;
 
   constructor(options = {}) {
     super(options);
@@ -305,6 +304,7 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
 
   async _prepareContext(_options) {
     return {
+      damageDialogTemplate: true,
       damageTypes: DAMAGE_TYPES,
       damageTypeSelect: { name: 'type-suggest' },
       isPersistent: this.selectedMode === 'persistent',
@@ -378,7 +378,7 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
     }
   });
 
-  static PARTS = getTemplatePart('condition-picker');
+  static PARTS = MAIN_TEMPLATE_PART;
 
   constructor(options = {}) {
     super(options);
@@ -425,7 +425,7 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
         };
       });
 
-    return { conditions };
+    return { conditionPickerTemplate: true, conditions };
   }
 
   _onRender(context, options) {
@@ -566,7 +566,7 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   });
 
-  static PARTS = getTemplatePart('comfort-edit');
+  static PARTS = MAIN_TEMPLATE_PART;
 
   constructor(options = {}) {
     super(options);
@@ -576,6 +576,7 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
 
   async _prepareContext(_options) {
     return {
+      comfortEditTemplate: true,
       content: this.initialValue,
       labels: {
         addCondition: localize('tooltips.addCondition', 'Add Condition'),
@@ -693,7 +694,7 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   });
 
-  static PARTS = getTemplatePart('dc-suggestion');
+  static PARTS = MAIN_TEMPLATE_PART;
 
   constructor(options = {}) {
     super(options);
@@ -704,6 +705,7 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
 
   async _prepareContext(_options) {
     return {
+      dcSuggestionTemplate: true,
       baseLevel: getCreatureLevelFromSheet() ?? 0,
       currentLevel: this.currentLevel,
       levelControlId: 'dc-suggest-level',
@@ -749,7 +751,7 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     }
   });
 
-  static PARTS = getTemplatePart('damage-suggestion');
+  static PARTS = MAIN_TEMPLATE_PART;
 
   constructor(options = {}) {
     super(options);
@@ -763,6 +765,7 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
 
   async _prepareContext(_options) {
     return {
+      damageSuggestionTemplate: true,
       baseLevel: this.baseLevel,
       currentLevel: this.currentLevel,
       levelControlId: 'dmg-suggest-level',
@@ -1006,7 +1009,7 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     actions: { insertAll: InlineBuilderDialog.insertAll }
   });
 
-  static PARTS = getTemplatePart('main');
+  static PARTS = MAIN_TEMPLATE_PART;
 
   activeSections = new Set(['template']);
   selectedTemplateType = null;
@@ -1021,6 +1024,7 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
 
   async _prepareContext(_options) {
     return {
+      mainTemplate: true,
       labels: getInlineBuilderLabels(),
       templateTypes: TEMPLATE_CONFIG.types.map(localizeOption),
       damageTypes: TEMPLATE_CONFIG.damageTypes,
@@ -1460,15 +1464,10 @@ function exposeInlineBuilderApi() {
     window.openInlineBuilder = openInlineBuilderDialog;
 }
 
-function registerModuleHooks(registerFeatureHooks = null) {
-    registerInlineBuilderKeybinding();
-    registerInlineBuilderHooks();
-    if (typeof registerFeatureHooks === "function") registerFeatureHooks();
-}
-
 export {
     exposeInlineBuilderApi,
-    registerModuleHooks,
+    registerInlineBuilderHooks,
+    registerInlineBuilderKeybinding,
     generateCheckString,
     generateDamageString,
     generateTemplateString,

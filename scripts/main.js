@@ -1,5 +1,5 @@
 import { DamageDebug, registerDebugSettings } from "./debug.js";
-import { exposeInlineBuilderApi, registerModuleHooks } from "./hooks.js";
+import { exposeInlineBuilderApi, registerInlineBuilderHooks, registerInlineBuilderKeybinding } from "./hooks.js";
 import { MODULE_ID, TOOLBELT_ID } from "./config.js";
 import {
     PF2E_CONDITION_MAP,
@@ -1176,11 +1176,7 @@ const AUTO_ROLL_DELAYS = [0, 90, 220, 520];
 const PROCESS_DELAYS = [60, 180, 420, 900, 1600];
 
 class InlineAutomations {
-    static instance = null;
-
     constructor() {
-        if (InlineAutomations.instance) return InlineAutomations.instance;
-        InlineAutomations.instance = this;
         this.processingMessages = new Set();
         this.autoRollingMessages = new Set();
         this.autoRolledControls = new Set();
@@ -1203,11 +1199,6 @@ class InlineAutomations {
         this.targetRecordCache = new Map();
         this.itemCache = new Map();
         this.descriptionProfileCache = new Map();
-    }
-
-    static get() {
-        if (!InlineAutomations.instance) InlineAutomations.instance = new InlineAutomations();
-        return InlineAutomations.instance;
     }
 
     registerHooks() {
@@ -1513,8 +1504,10 @@ class InlineAutomations {
     }
 }
 
+let inlineAutomations = null;
+
 function registerAutomationHooks() {
-    InlineAutomations.get().registerHooks();
+    (inlineAutomations ??= new InlineAutomations()).registerHooks();
 }
 
 function initializeModule() {
@@ -1522,7 +1515,9 @@ function initializeModule() {
 
     Hooks.once("init", () => {
         registerDebugSettings();
-        registerModuleHooks(registerAutomationHooks);
+        registerInlineBuilderKeybinding();
+        registerInlineBuilderHooks();
+        registerAutomationHooks();
     });
 }
 

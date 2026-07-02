@@ -45,25 +45,7 @@
   ],
   "styles": [
     {
-      "src": "styles/base.css"
-    },
-    {
-      "src": "styles/main-dialog.css"
-    },
-    {
-      "src": "styles/editor-button.css"
-    },
-    {
-      "src": "styles/suggestion-dialogs.css"
-    },
-    {
-      "src": "styles/condition-picker.css"
-    },
-    {
-      "src": "styles/comfort-edit.css"
-    },
-    {
-      "src": "styles/responsive.css"
+      "src": "styles/main.css"
     }
   ],
   "languages": [

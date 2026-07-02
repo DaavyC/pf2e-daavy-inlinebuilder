@@ -1,3 +1,4 @@
+{{#if mainTemplate}}
 <div class="inlinebuilder-content inlinebuilder-main">
   <div class="inlinebuilder-toggles" aria-label="{{labels.sectionsAria}}">
     <button type="button" class="inlinebuilder-toggle active" data-section="template" data-tooltip="{{labels.areaTemplate}}">
@@ -156,3 +157,140 @@
     </button>
   </div>
 </div>
+{{/if}}
+
+{{#if damageDialogTemplate}}
+<div class="inlinebuilder-content">
+  <fieldset class="template-section">
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>{{labels.damage}}</label>
+        <span>{{labels.formulaOnly}}</span>
+      </div>
+      <div class="inlinebuilder-control">
+        <input type="text" name="damage" placeholder="1d6">
+      </div>
+    </div>
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>{{labels.type}}</label>
+        <span>{{labels.damageType}}</span>
+      </div>
+      <div class="inlinebuilder-control">
+        {{> inlinebuilderDamageTypeSelect}}
+      </div>
+    </div>
+  </fieldset>
+  <div class="actions-footer">
+    <button type="button" class="insert-all-btn" data-action="add">
+      <i class="fas fa-plus"></i>
+      <span>{{labels.add}}</span>
+    </button>
+  </div>
+</div>
+{{/if}}
+
+{{#if conditionPickerTemplate}}
+<div class="inlinebuilder-content">
+  <div class="condition-picker-grid">
+    {{#each conditions}}
+    <div class="cond-btn-card {{actionClass}}{{#if isActive}} active{{/if}}" data-cond="{{slug}}" title="{{actionTitle}}">
+      {{#if iconClass}}
+      <i class="cond-icon cond-icon-fa {{iconClass}}"></i>
+      {{else}}
+      <img class="cond-icon" src="{{iconPath}}" alt="{{label}}">
+      {{/if}}
+      <span class="cond-name">{{label}}</span>
+      {{#if isValued}}
+      <input type="number" class="cond-value-input" min="1" max="10" value="{{value}}" data-cond="{{slug}}">
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+</div>
+{{/if}}
+
+{{#if comfortEditTemplate}}
+<div class="inlinebuilder-content">
+  <div class="comfort-edit-container">
+    <textarea name="content" rows="10">{{content}}</textarea>
+    <button type="button" class="add-condition-comfort" data-action="addCondition" data-tooltip="{{labels.addCondition}}">
+      <i class="fas fa-plus"></i>
+    </button>
+  </div>
+  <div class="actions-footer">
+    <button type="button" class="insert-all-btn" data-action="save">
+      <i class="fas fa-save"></i>
+      <span>{{labels.save}}</span>
+    </button>
+  </div>
+</div>
+{{/if}}
+
+{{#if dcSuggestionTemplate}}
+<div class="inlinebuilder-content inlinebuilder-dmg-suggest">
+  <fieldset class="template-section">
+    {{> inlinebuilderLevelControl}}
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>{{labels.intensity}}</label>
+        <span>{{labels.dcCategory}}</span>
+      </div>
+      <div class="inlinebuilder-control icon-btn-group segmented text-segments">
+        {{#each intensities}}
+        <button type="button" class="icon-btn dc-btn" data-action="confirmDC" data-intensity="{{value}}">{{label}}</button>
+        {{/each}}
+      </div>
+    </div>
+  </fieldset>
+</div>
+{{/if}}
+
+{{#if damageSuggestionTemplate}}
+<div class="inlinebuilder-content inlinebuilder-dmg-suggest">
+  {{#if showStep1}}
+  <fieldset class="template-section">
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>{{labels.type}}</label>
+        <span>{{labels.damageProfile}}</span>
+      </div>
+      <div class="inlinebuilder-control icon-btn-group segmented text-segments">
+        <button type="button" class="icon-btn" data-action="selectType" data-type="area">
+          <i class="fas fa-burst"></i>
+          <span>{{labels.area}}</span>
+        </button>
+        <button type="button" class="icon-btn" data-action="selectType" data-type="strike">
+          <i class="fas fa-hand-fist"></i>
+          <span>{{labels.strike}}</span>
+        </button>
+      </div>
+    </div>
+  </fieldset>
+  {{/if}}
+
+  {{#if showStep2}}
+  <fieldset class="template-section">
+    {{> inlinebuilderLevelControl}}
+    <div class="inlinebuilder-row">
+      <div class="inlinebuilder-label">
+        <label>{{labels.intensity}}</label>
+        <span>{{labels.damageCategory}}</span>
+      </div>
+      <div class="inlinebuilder-control icon-btn-group segmented text-segments">
+        {{#if isArea}}
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="unlimited">{{labels.unlimited}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="limited">{{labels.limited}}</button>
+        {{/if}}
+        {{#if isStrike}}
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="extreme">{{labels.extreme}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="high">{{labels.high}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="moderate">{{labels.moderate}}</button>
+        <button type="button" class="icon-btn" data-action="selectSub" data-sub="low">{{labels.low}}</button>
+        {{/if}}
+      </div>
+    </div>
+  </fieldset>
+  {{/if}}
+</div>
+{{/if}}
