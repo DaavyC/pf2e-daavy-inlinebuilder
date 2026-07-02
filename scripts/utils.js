@@ -1,4 +1,4 @@
-import { DAMAGE_TYPES, PF2E_CONDITION_SET, PF2E_CONDITION_MAP } from "../data/tables.js";
+import { DAMAGE_TYPES, PF2E_CONDITION_MAP, PF2E_CONDITION_SET } from "./data/tables.js";
 
 const SORTED_DAMAGE_TYPES = [...DAMAGE_TYPES].sort((left, right) => right.length - left.length);
 const AUTOMATION_OUTCOME_BY_LABEL = new Map([
@@ -8,7 +8,20 @@ const AUTOMATION_OUTCOME_BY_LABEL = new Map([
     ["critical failure", "criticalFailure"]
 ]);
 
-// Normalizes text for comparison.
+function uniqueBy(values, keyFn, mapFn = (value) => value) {
+    const uniqueValues = [];
+    const seen = new Set();
+
+    for (const value of values) {
+        const key = keyFn(value);
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        uniqueValues.push(mapFn(value));
+    }
+
+    return uniqueValues;
+}
+
 function normalizeText(value) {
     return (value ?? "")
         .normalize("NFD")
@@ -18,7 +31,6 @@ function normalizeText(value) {
         .toLowerCase();
 }
 
-// Reads short damage tags.
 function parseShortDamageTag(content, prefix) {
     if (typeof content !== "string" || !content.toLowerCase().startsWith(prefix)) return null;
 
@@ -35,7 +47,6 @@ function parseShortDamageTag(content, prefix) {
     return null;
 }
 
-// Converts automation tokens.
 function convertAutomationToken(match, inner) {
     const content = inner.trim();
     const persistentDamage = parseShortDamageTag(content, "pd-");
@@ -61,12 +72,10 @@ function convertAutomationToken(match, inner) {
     return uuid ? `@UUID[${uuid}]{${content}}` : match;
 }
 
-// Converts automation text.
 function convertAutomationText(text) {
     return String(text ?? "").replace(/\{([^}]+)\}/g, convertAutomationToken);
 }
 
-// Converts HTML to short tags.
 function convertAutomationHtmlToShortText(content) {
     return String(content ?? "")
         .replace(/@UUID\[[^\]]+\]\{([^}]+)\}/g, (_match, inner) => `{${inner}}`)
@@ -77,7 +86,6 @@ function convertAutomationHtmlToShortText(content) {
         });
 }
 
-// Extracts braced short damage tags.
 function getShortDamageTags(text, prefix) {
     const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const regex = new RegExp(`\\{${escapedPrefix}([^-{}]+)-([^{}]+)\\}`, "ig");
@@ -87,7 +95,6 @@ function getShortDamageTags(text, prefix) {
     }));
 }
 
-// Extracts the line outcome.
 function getAutomationLineOutcome(line) {
     const idx = String(line ?? "").indexOf(":");
     if (idx < 0) return null;
@@ -95,7 +102,6 @@ function getAutomationLineOutcome(line) {
     return AUTOMATION_OUTCOME_BY_LABEL.get(normalizeText(String(line).slice(0, idx))) ?? null;
 }
 
-// Extracts damage specs.
 function extractDamageSpecs(text) {
     const specs = [];
 
@@ -123,7 +129,6 @@ function extractDamageSpecs(text) {
     return specs;
 }
 
-// Creates the damage signature.
 function createDamageSignature(damage) {
     return [
         damage.formula,
@@ -132,7 +137,6 @@ function createDamageSignature(damage) {
     ].map((value) => normalizeText(value)).join("|");
 }
 
-// Reads one condition tag.
 function parseConditionTag(tag) {
     const parts = String(tag ?? "").trim().toLowerCase().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return null;
@@ -145,7 +149,6 @@ function parseConditionTag(tag) {
     return { name: slug, value };
 }
 
-// Extracts automation conditions.
 function extractAutomationConditions(line) {
     const idx = String(line ?? "").indexOf(":");
     if (idx < 0) return [];
@@ -154,7 +157,7 @@ function extractAutomationConditions(line) {
     const foundConditions = [];
     const seen = new Set();
 
-    const addUniquePersistentDamage = (formula, damageType) => {
+    function addUniquePersistentDamage(formula, damageType) {
         const key = `pd:${formula}:${damageType}`;
         if (seen.has(key)) return;
         seen.add(key);
@@ -163,9 +166,9 @@ function extractAutomationConditions(line) {
             formula,
             damageType
         });
-    };
+    }
 
-    const addUniqueCondition = (tag) => {
+    function addUniqueCondition(tag) {
         const condition = parseConditionTag(tag);
         if (!condition) return;
 
@@ -174,7 +177,7 @@ function extractAutomationConditions(line) {
 
         seen.add(key);
         foundConditions.push(condition);
-    };
+    }
 
     for (const persistentMatch of conditionText.matchAll(/@Damage\[([^[]+)\[persistent,([^\]]+)\]\]/ig)) {
         addUniquePersistentDamage(persistentMatch[1].trim(), persistentMatch[2].trim());
@@ -207,5 +210,6 @@ export {
     extractDamageSpecs,
     getAutomationLineOutcome,
     normalizeText,
-    parseShortDamageTag
+    parseShortDamageTag,
+    uniqueBy
 };

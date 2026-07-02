@@ -41,7 +41,7 @@
     ]
   },
   "esmodules": [
-    "main.js"
+    "init.js"
   ],
   "styles": [
     {

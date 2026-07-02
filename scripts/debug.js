@@ -1,4 +1,4 @@
-import { MODULE_ID, localize } from "./utils/constants.js";
+import { MODULE_ID, localize } from "./config.js";
 
 const DEBUG_SETTING = "debugAutomation";
 let readyLogRegistered = false;
