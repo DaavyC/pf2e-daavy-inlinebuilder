@@ -250,6 +250,5 @@ export {
     extractDamageSpecs,
     getAutomationLineOutcome,
     normalizeText,
-    parseShortDamageTag,
     uniqueBy
 };

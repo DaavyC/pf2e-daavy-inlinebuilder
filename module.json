@@ -9,8 +9,7 @@
       "name": "Daavy",
       "discord": "daavy",
       "email": "Daavyc@gmail.com",
-      "url": "https://github.com/DaavyC",
-      "flags": {}
+      "url": "https://github.com/DaavyC"
     }
   ],
   "url": "https://github.com/DaavyC/pf2e-daavy-inlinebuilder",
@@ -35,8 +34,7 @@
     "requires": [
       {
         "id": "pf2e-toolbelt",
-        "type": "module",
-        "compatibility": {}
+        "type": "module"
       }
     ]
   },
@@ -55,6 +53,5 @@
       "path": "lang/en.json",
       "flags": {}
     }
-  ],
-  "flags": {}
+  ]
 }

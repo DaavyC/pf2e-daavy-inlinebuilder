@@ -1,4 +1,4 @@
-import { DamageDebug, registerDebugSettings } from "./debug.js";
+import { debugDamage, getDamageApplicationLogData, registerDebugSettings } from "./debug.js";
 import { exposeInlineBuilderApi, registerInlineBuilderHooks, registerInlineBuilderKeybinding } from "./hooks.js";
 import { MODULE_ID, TOOLBELT_ID } from "./config.js";
 import {
@@ -818,7 +818,12 @@ async function applyDamageToTarget(runtime, message, application, rollIndex = 0)
         ]);
 
         const beforeHp = getActorHpSnapshot(actor);
-        DamageDebug.directApplyStart(message, application, rollIndex, beforeHp);
+        debugDamage("direct apply start", {
+            damageMessage: message.id,
+            application: getDamageApplicationLogData(application),
+            rollIndex,
+            beforeHp
+        });
         await contextClone.applyDamage({
             damage,
             token,
@@ -831,10 +836,22 @@ async function applyDamageToTarget(runtime, message, application, rollIndex = 0)
         damageApplied = true;
         await markToolbeltDamageApplied(runtime, message, application, token, rollIndex);
         const afterHp = getActorHpSnapshot(actor);
-        DamageDebug.directApplyComplete(message, application, rollIndex, beforeHp, afterHp);
+        debugDamage("direct apply complete", {
+            damageMessage: message.id,
+            application: getDamageApplicationLogData(application),
+            rollIndex,
+            beforeHp,
+            afterHp,
+            appliedKeys: Object.keys(message.flags?.[TOOLBELT_ID]?.targetHelper?.applied ?? {})
+        });
         return true;
     } catch (error) {
-        DamageDebug.directApplyFailed(message, application, rollIndex, error);
+        debugDamage("direct apply failed", {
+            damageMessage: message?.id,
+            application: getDamageApplicationLogData(application),
+            rollIndex,
+            error: error?.message ?? String(error)
+        });
         console.error(`[${MODULE_ID}] Automatic damage application failed:`, error);
         return damageApplied;
     }
@@ -883,19 +900,24 @@ function scheduleApplyDamageMessage(runtime, damageMessage, applications) {
 
     if (uniqueApplications.length === 0) return;
     runtime.pendingDamageApplications.set(damageMessage.id, uniqueApplications);
-    DamageDebug.scheduleApply(damageMessage, uniqueApplications);
+    debugDamage("schedule damage apply", {
+        damageMessage: damageMessage.id,
+        sourceMessage: damageMessage.getFlag?.(MODULE_ID, "sourceMessage"),
+        damageJobId: damageMessage.getFlag?.(MODULE_ID, "damageJobId"),
+        applications: uniqueApplications.map(getDamageApplicationLogData)
+    });
     scheduleDamageApply(runtime, damageMessage.id);
 }
 
 function scheduleDamageApply(runtime, messageId, delays = DAMAGE_APPLY_DELAYS) {
     if (!messageId) return;
     if (runtime.damageApplyLoops.has(messageId)) {
-        DamageDebug.skipApplyLoopRunning(messageId);
+        debugDamage("skip apply loop already running", { damageMessage: messageId });
         return;
     }
 
     runtime.damageApplyLoops.add(messageId);
-    DamageDebug.startApplyLoop(messageId, delays);
+    debugDamage("start apply loop", { damageMessage: messageId, delays });
     void runDamageApplyLoop(runtime, messageId, delays);
 }
 
@@ -909,37 +931,46 @@ async function runDamageApplyLoop(runtime, messageId, delays) {
             if (waitTime > 0) await runtime.wait(waitTime);
 
             if (!runtime.pendingDamageApplications.has(messageId)) break;
-            DamageDebug.applyLoopTick(messageId, delay);
+            debugDamage("apply loop tick", { damageMessage: messageId, delay });
             await applyPendingDamageMessage(runtime, messageId);
         }
     } finally {
         runtime.damageApplyLoops.delete(messageId);
-        DamageDebug.finishApplyLoop(messageId, runtime.pendingDamageApplications.has(messageId));
+        debugDamage("finish apply loop", {
+            damageMessage: messageId,
+            stillPending: runtime.pendingDamageApplications.has(messageId)
+        });
     }
 }
 
 async function applyPendingDamageMessage(runtime, messageId, root = null) {
     if (!messageId) return;
     if (runtime.applyingDamageMessages.has(messageId)) {
-        DamageDebug.skipApplyAlreadyRunning(messageId);
+        debugDamage("skip apply already running", { damageMessage: messageId });
         return;
     }
 
     const applications = runtime.pendingDamageApplications.get(messageId);
     if (!applications?.length) {
-        DamageDebug.skipApplyNoPending(messageId);
+        debugDamage("skip apply no pending applications", { damageMessage: messageId });
         return;
     }
 
     const messageRoot = root ?? runtime.getMessageRoot(messageId) ?? runtime.latestMessageRoots.get(messageId);
     if (!(messageRoot instanceof HTMLElement)) {
-        DamageDebug.skipApplyNoRoot(messageId, applications);
+        debugDamage("skip apply no message root", {
+            damageMessage: messageId,
+            pendingCount: applications.length
+        });
         return;
     }
 
     const buttonIndex = getDamageApplyButtonIndex(messageRoot);
     if (buttonIndex.size === 0) {
-        DamageDebug.skipApplyNoButtonIndex(messageId, applications);
+        debugDamage("skip apply no button index", {
+            damageMessage: messageId,
+            pendingCount: applications.length
+        });
     }
 
     const applyLock = await claimDamageMessageApplyLock(runtime, messageId);
@@ -948,12 +979,20 @@ async function applyPendingDamageMessage(runtime, messageId, root = null) {
     runtime.applyingDamageMessages.add(messageId);
     try {
         const claimedApplications = await claimPendingDamageApplications(runtime, messageId, applications);
-        DamageDebug.applyPendingStart(messageId, claimedApplications, buttonIndex);
+        debugDamage("apply pending start", {
+            damageMessage: messageId,
+            pending: claimedApplications.map(getDamageApplicationLogData),
+            indexedKeys: Array.from(buttonIndex.keys())
+        });
         const remaining = [];
         for (const application of claimedApplications) {
             const clickKey = getDamageApplicationClickKey(runtime, messageId, application);
             if (runtime.damageApplicationClicks.has(clickKey)) {
-                DamageDebug.skipClickAlreadyClaimed(messageId, clickKey, application);
+                debugDamage("skip click already claimed", {
+                    damageMessage: messageId,
+                    clickKey,
+                    application: getDamageApplicationLogData(application)
+                });
                 continue;
             }
 
@@ -962,16 +1001,30 @@ async function applyPendingDamageMessage(runtime, messageId, root = null) {
             const rollIndex = button ? getDamageRollIndex(button) : 0;
             if (isToolbeltDamageAlreadyApplied(runtime, damageMessage, application, rollIndex)) {
                 runtime.damageApplicationClicks.add(clickKey);
-                DamageDebug.skipClickToolbeltApplied(messageId, clickKey, application, getToolbeltData(damageMessage)?.applied);
+                debugDamage("skip click toolbelt already applied", {
+                    damageMessage: messageId,
+                    clickKey,
+                    application: getDamageApplicationLogData(application),
+                    toolbeltApplied: getToolbeltData(damageMessage)?.applied
+                });
                 continue;
             }
 
             runtime.damageApplicationClicks.add(clickKey);
             if (button) markDamageButtonsClaimed(messageId, application, button);
-            else DamageDebug.buttonNotFound(messageId, application, getDamageApplyButtonKey(application.uuid, application.multiplier));
+            else debugDamage("button not found", {
+                damageMessage: messageId,
+                application: getDamageApplicationLogData(application),
+                expectedKey: getDamageApplyButtonKey(application.uuid, application.multiplier)
+            });
 
             const applied = await applyDamageToTarget(runtime, damageMessage, application, rollIndex);
-            DamageDebug.confirmClickApplied(messageId, clickKey, application, applied);
+            debugDamage("confirm damage click applied", {
+                damageMessage: messageId,
+                clickKey,
+                application: getDamageApplicationLogData(application),
+                confirmed: applied
+            });
             if (!applied) {
                 await releaseDamageApplicationClaim(runtime, messageId, clickKey);
                 remaining.push(application);
@@ -986,7 +1039,10 @@ async function applyPendingDamageMessage(runtime, messageId, root = null) {
         const unclaimed = applications.filter((application) => !claimedApplications.includes(application));
         if (remaining.length + unclaimed.length > 0) runtime.pendingDamageApplications.set(messageId, remaining.concat(unclaimed));
         else runtime.pendingDamageApplications.delete(messageId);
-        DamageDebug.applyPendingComplete(messageId, remaining);
+        debugDamage("apply pending complete", {
+            damageMessage: messageId,
+            remaining: remaining.map(getDamageApplicationLogData)
+        });
     } finally {
         await completeDamageMessageApplyLock(messageId, applyLock);
         runtime.applyingDamageMessages.delete(messageId);
@@ -1036,7 +1092,10 @@ async function claimDamageMessageApplyLock(runtime, messageId) {
     const existing = message.getFlag(MODULE_ID, "damageApplyLock");
     const isStale = existing?.status === "applying" && Date.now() - Number(existing.time ?? 0) > DAMAGE_CLAIM_STALE_MS;
     if (existing?.status === "applying" && existing.owner !== runtime.damageRunId && !isStale) {
-        DamageDebug.skipMessageApplyLock(messageId, existing);
+        debugDamage("skip damage message apply lock", {
+            damageMessage: messageId,
+            lock: existing
+        });
         return null;
     }
 
@@ -1052,7 +1111,12 @@ async function claimDamageMessageApplyLock(runtime, messageId) {
 
     const current = game.messages.get(messageId)?.getFlag(MODULE_ID, "damageApplyLock");
     const confirmed = current?.owner === lock.owner && current?.nonce === lock.nonce && current?.status === "applying";
-    DamageDebug.claimMessageApplyLock(messageId, lock, confirmed, current);
+    debugDamage("claim damage message apply lock", {
+        damageMessage: messageId,
+        lock,
+        confirmed,
+        current
+    });
     return confirmed ? lock : null;
 }
 
@@ -1081,12 +1145,22 @@ async function claimPendingDamageApplications(runtime, messageId, applications) 
         const existing = claims[key];
         if (existing?.status === "applied") {
             runtime.damageApplicationClicks.add(key);
-            DamageDebug.skipPersistentClaim(messageId, key, application, existing);
+            debugDamage("skip persistent damage claim", {
+                damageMessage: messageId,
+                clickKey: key,
+                application: getDamageApplicationLogData(application),
+                claim: existing
+            });
             continue;
         }
         const isStale = existing?.status === "applying" && Date.now() - Number(existing.time ?? 0) > DAMAGE_CLAIM_STALE_MS;
         if (existing?.status === "applying" && existing.owner !== runtime.damageRunId && !isStale) {
-            DamageDebug.skipPersistentClaim(messageId, key, application, existing);
+            debugDamage("skip persistent damage claim", {
+                damageMessage: messageId,
+                clickKey: key,
+                application: getDamageApplicationLogData(application),
+                claim: existing
+            });
             continue;
         }
 
@@ -1101,7 +1175,10 @@ async function claimPendingDamageApplications(runtime, messageId, applications) 
 
     if (changed) {
         await setDamageApplicationClaims(message, claims);
-        DamageDebug.claimPersistentApplications(messageId, claimed);
+        debugDamage("claim persistent damage applications", {
+            damageMessage: messageId,
+            applications: claimed.map(getDamageApplicationLogData)
+        });
     }
 
     return claimed;
@@ -1229,7 +1306,13 @@ class InlineAutomations {
     queueDamageMessage(message, root = null) {
         if (!message?.id || !this.isAutomaticDamageMessage(message)) return false;
         this.rememberMessageRoot(message.id, root);
-        DamageDebug.renderMessage(message, root, this.pendingDamageApplications.has(message.id));
+        debugDamage("render damage message", {
+            messageId: message.id,
+            sourceMessage: message.getFlag?.(MODULE_ID, "sourceMessage"),
+            damageJobId: message.getFlag?.(MODULE_ID, "damageJobId"),
+            hasPendingApplications: this.pendingDamageApplications.has(message.id),
+            hasRoot: root instanceof HTMLElement
+        });
         if (this.pendingDamageApplications.has(message.id)) {
             scheduleDamageApply(this, message.id);
         }
@@ -1300,11 +1383,11 @@ class InlineAutomations {
     async rollAndApplyDamageFromAction(sourceMessage, item, targets, profile = null) {
         if (!sourceMessage?.id) return false;
         if (this.damageSourceInProgress.has(sourceMessage.id) || this.damageCompletedSources.has(sourceMessage.id)) {
-            DamageDebug.skipSourceHandled(
-                sourceMessage,
-                this.damageSourceInProgress.has(sourceMessage.id),
-                this.damageCompletedSources.has(sourceMessage.id)
-            );
+            debugDamage("skip source already handled/in progress", {
+                sourceMessage: sourceMessage.id,
+                inProgress: this.damageSourceInProgress.has(sourceMessage.id),
+                completed: this.damageCompletedSources.has(sourceMessage.id)
+            });
             return false;
         }
 
@@ -1314,16 +1397,22 @@ class InlineAutomations {
         const currentMessage = game.messages.get(sourceMessage.id) ?? sourceMessage;
         if (currentMessage.getFlag(MODULE_ID, "damageAutomationComplete") === true) {
             this.damageCompletedSources.add(currentMessage.id);
-            DamageDebug.skipSourceFlagComplete(currentMessage);
+            debugDamage("skip source flag complete", { sourceMessage: currentMessage.id });
             return false;
         }
 
         const { processedDamage, processedDamageJobs } = this.getProcessedDamageFlags(currentMessage);
         const jobs = getDamageJobs(targets, descriptionProfile);
-        DamageDebug.evaluateJobs(currentMessage, targets, jobs, processedDamage, processedDamageJobs);
+        debugDamage("evaluate damage jobs", {
+            sourceMessage: currentMessage.id,
+            targetCount: targets.length,
+            jobCount: jobs.length,
+            processedDamageCount: Object.keys(processedDamage).length,
+            processedJobCount: Object.keys(processedDamageJobs).length
+        });
         if (jobs.length === 0) {
             await this.completePotentialDamageAutomation(currentMessage, descriptionProfile, processedDamage, processedDamageJobs);
-            DamageDebug.noJobs(currentMessage);
+            debugDamage("no damage jobs", { sourceMessage: currentMessage.id });
             return false;
         }
 
@@ -1356,16 +1445,28 @@ class InlineAutomations {
 
     async rollDamageJob(currentMessage, item, job) {
         try {
-            DamageDebug.createMessageStart(currentMessage, job);
+            debugDamage("create damage message start", {
+                sourceMessage: currentMessage.id,
+                jobId: job.jobId,
+                signature: job.signature,
+                applications: job.applications.map(getDamageApplicationLogData)
+            });
             const damageMessage = await createDamageMessage(this, currentMessage, item, job, job.applications);
             if (!damageMessage?.id) {
-                DamageDebug.createMessageEmpty(currentMessage, job);
+                debugDamage("create damage message returned empty", {
+                    sourceMessage: currentMessage.id,
+                    jobId: job.jobId
+                });
                 return false;
             }
 
             this.damageJobMessages.set(job.jobId, damageMessage.id);
             this.trimMap(this.damageJobMessages, 300);
-            DamageDebug.createMessageComplete(currentMessage, damageMessage, job);
+            debugDamage("create damage message complete", {
+                sourceMessage: currentMessage.id,
+                damageMessage: damageMessage.id,
+                jobId: job.jobId
+            });
             scheduleApplyDamageMessage(this, damageMessage, job.applications);
             return true;
         } catch (error) {
@@ -1400,7 +1501,15 @@ class InlineAutomations {
             const keys = uniqueApplications.map((application) => createDamageProcessedKey(message, application, job.signature));
             const jobId = createDamageJobId(message, job, uniqueApplications);
             const blockedReason = getDamageJobBlockedReason(this, message.id, jobId, processedDamageJobs);
-            DamageDebug.candidateJob(message, { ...job, jobId }, applications, uniqueApplications, keys, blockedReason);
+            debugDamage("candidate damage job", {
+                sourceMessage: message.id,
+                jobId,
+                signature: job.signature,
+                rawApplications: applications.length,
+                uniqueApplications: uniqueApplications.map(getDamageApplicationLogData),
+                keys,
+                blockedReason
+            });
             if (blockedReason) continue;
 
             keys.forEach((key) => this.damageInProgress.add(key));
@@ -1521,21 +1630,4 @@ function initializeModule() {
     });
 }
 
-export {
-    initializeModule,
-    InlineAutomations,
-    registerAutomationHooks,
-    completeDamageAutomation,
-    createDamageFlavor,
-    createDamageJobId,
-    createDamageProcessedKey,
-    createGlobalDamageApplicationKey,
-    getDamageApplicationClickKey,
-    getDamageApplyButtonKey,
-    getDamageJobBlockedReason,
-    getDamageJobs,
-    getMainCheckConfigFromLines,
-    getMainDamageSpecFromLines,
-    getUniqueDamageApplications,
-    hasPotentialDamageAutomation
-};
+export { initializeModule };

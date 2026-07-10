@@ -745,9 +745,7 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     actions: {
       selectType: DamageSuggestionDialogV2.selectType,
       selectSub: DamageSuggestionDialogV2.selectSub,
-      adjustLevel: DamageSuggestionDialogV2.adjustLevel,
-      confirm: DamageSuggestionDialogV2.confirmDamage,
-      close: DamageSuggestionDialogV2.closeDialog
+      adjustLevel: DamageSuggestionDialogV2.adjustLevel
     }
   });
 
@@ -825,13 +823,6 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     await this.close();
   }
 
-  static async closeDialog(_event, _target) {
-    if (this.callback) {
-      this.callback(null);
-    }
-
-    await this.close();
-  }
 }
 
 async function showDCSuggestionDialog() {
@@ -1467,9 +1458,5 @@ function exposeInlineBuilderApi() {
 export {
     exposeInlineBuilderApi,
     registerInlineBuilderHooks,
-    registerInlineBuilderKeybinding,
-    generateCheckString,
-    generateDamageString,
-    generateTemplateString,
-    parseDescriptionBlock
+    registerInlineBuilderKeybinding
 };
