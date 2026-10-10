@@ -39,7 +39,3 @@ A **Foundry VTT** module for **Pathfinder Second Edition** that helps build PF2e
 ## 📚 Credits
 
 - **[PF2e Toolbelt](https://github.com/reonZ/pf2e-toolbelt)** by ReonZ
-
----
-
-> This module was built with AI-assisted development.
