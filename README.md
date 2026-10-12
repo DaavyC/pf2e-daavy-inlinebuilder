@@ -19,17 +19,15 @@ Create area templates, damage rolls, saving throws, and outcome effects in PF2e 
 
 ## Automations
 
-Enable Target Helper and Target Helper Automations in Daavy's Addons settings. Target Helper rolls saves and applies outcome damage to selected targets. Inline Builder adds the conditions and persistent damage configured for each outcome and sends outcome damage to Daavy's Addons to apply.
+Turn on Target Helper and Template Helper in Daavy's Addons to place templates from item cards. Turn on Automations to roll saves and apply each result's conditions and damage to selected targets. A GM must be online, and the sender must own the source actor or be the GM.
 
-Daavy's Addons applies its damage multipliers to basic saves. Its permissions and NPC-only setting control outcome automation.
+Inline Builder applies outcome damage as written. Daavy's Addons applies basic-save multipliers to the item's normal damage. The NPCs only setting can restrict outcome effects to NPCs.
 
 ## Settings
 
 | Setting | Effect |
 | --- | --- |
 | Theme | Choose Default or Light for Inline Builder windows. |
-
-GMs can donate, visit Discord, and submit bug reports or suggestions from the module settings.
 
 ## Installation
 
@@ -41,4 +39,4 @@ In Foundry VTT, open Add-on Modules, choose Install Module, and enter the manife
 
 - Requires Foundry VTT 14.
 - Requires Pathfinder Second Edition.
-- Requires Daavy's Addons for Target Helper automation.
+- Requires Daavy's Addons.
