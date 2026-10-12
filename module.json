@@ -1,8 +1,8 @@
 {
   "id": "pf2e-daavy-inlinebuilder",
   "title": "PF2e Daavy's Inline Builder",
-  "description": "<p>Adds a button to create Area, Damage, and Saving Throw templates in the description editor.</p>",
-  "version": "1.0.1",
+  "description": "<p>Create area templates, damage rolls, saving throws, and outcome effects in PF2e descriptions.</p>",
+  "version": "1.0.2",
   "license": "LICENSE",
   "authors": [
     {
@@ -24,26 +24,27 @@
     "systems": [
       {
         "id": "pf2e",
-        "type": "system",
-        "compatibility": {
-          "minimum": "8.1.2",
-          "verified": "8.1.2"
-        }
+        "type": "system"
       }
     ],
     "requires": [
       {
-        "id": "pf2e-toolbelt",
+        "id": "daavy-addons",
         "type": "module"
       }
     ]
   },
   "esmodules": [
-    "init.js"
+    "scripts/main.js"
   ],
   "styles": [
     {
-      "src": "styles/main.css"
+      "src": "styles/main.css",
+      "layer": "pf2e-daavy-inlinebuilder"
+    },
+    {
+      "src": "styles/feedback.css",
+      "layer": "pf2e-daavy-inlinebuilder"
     }
   ],
   "languages": [

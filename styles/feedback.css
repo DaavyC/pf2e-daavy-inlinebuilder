@@ -1,0 +1,78 @@
+button.inlinebuilder-feedback-send {
+    color: #f4fff5 !important;
+    background: #236c35 !important;
+    border-color: #45a85b !important;
+}
+
+.inlinebuilder-feedback-send:hover {
+    background: #2f8846 !important;
+}
+
+.inlinebuilder-feedback-cancel {
+    color: #fff6f6 !important;
+    background: #7f2424 !important;
+    border-color: #c64b4b !important;
+}
+
+.inlinebuilder-feedback-cancel:hover {
+    background: #9b3030 !important;
+}
+
+button.inlinebuilder-feedback-send:focus,
+button.inlinebuilder-feedback-send:active,
+button.inlinebuilder-feedback-cancel:focus,
+button.inlinebuilder-feedback-cancel:active {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+button.inlinebuilder-feedback-send:focus-visible,
+button.inlinebuilder-feedback-cancel:focus-visible {
+    outline: 2px solid #4a90e2 !important;
+    outline-offset: 2px !important;
+    box-shadow: none !important;
+}
+
+.inlinebuilder-feedback-categories {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+}
+
+.inlinebuilder-feedback-category {
+    position: relative !important;
+    margin: 0 !important;
+}
+
+.inlinebuilder-feedback-category input {
+    position: absolute !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.inlinebuilder-feedback-category span {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 36px !important;
+    color: var(--inlinebuilder-text) !important;
+    background: var(--inlinebuilder-panel) !important;
+    border: 1px solid var(--inlinebuilder-border) !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+}
+
+.inlinebuilder-feedback-category:hover span {
+    background: var(--inlinebuilder-accent-bg) !important;
+    border-color: var(--inlinebuilder-accent) !important;
+}
+
+.inlinebuilder-feedback-category input:checked + span {
+    background: var(--inlinebuilder-accent-bg) !important;
+    border-color: var(--inlinebuilder-accent) !important;
+}
+
+.inlinebuilder-feedback-category input:focus-visible + span {
+    outline: 2px solid var(--inlinebuilder-accent) !important;
+    outline-offset: 2px !important;
+}

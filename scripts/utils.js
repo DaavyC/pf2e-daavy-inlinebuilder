@@ -1,60 +1,7 @@
-const PF2E_CONDITION_MAP = {
-    "doomed": "Compendium.pf2e.conditionitems.Item.3uh1r86TzbQvosxv",
-    "drained": "Compendium.pf2e.conditionitems.Item.4D2KBtexWXa6oUMR",
-    "paralyzed": "Compendium.pf2e.conditionitems.Item.6uEgoh53GbXuHpTF",
-    "deafened": "Compendium.pf2e.conditionitems.Item.9PR9y0bi4JPKnHPR",
-    "controlled": "Compendium.pf2e.conditionitems.Item.9qGBRpbX9NEwtAAr",
-    "fascinated": "Compendium.pf2e.conditionitems.Item.AdPVz7rbaVSRxHFg",
-    "off-guard": "Compendium.pf2e.conditionitems.Item.AJh5ex99aV6VTggg",
-    "stunned": "Compendium.pf2e.conditionitems.Item.dfCMdR4wnpbYNTix",
-    "petrified": "Compendium.pf2e.conditionitems.Item.dTwPJuKgBQCMxixg",
-    "stupefied": "Compendium.pf2e.conditionitems.Item.e1XGnhKNSQIm5IXg",
-    "immobilized": "Compendium.pf2e.conditionitems.Item.eIcWbB5o3pP6OIMe",
-    "unconscious": "Compendium.pf2e.conditionitems.Item.fBnFDH2MTzgFijKf",
-    "sickened": "Compendium.pf2e.conditionitems.Item.fesd1n5eVhpCSS18",
-    "fatigued": "Compendium.pf2e.conditionitems.Item.HL2l2VRSaQHu9lUw",
-    "clumsy": "Compendium.pf2e.conditionitems.Item.i3OJZU2nk64Df3xm",
-    "prone": "Compendium.pf2e.conditionitems.Item.j91X7x0XSomq8d60",
-    "grabbed": "Compendium.pf2e.conditionitems.Item.kWc1fhmv9LBiTuei",
-    "persistent-damage": "Compendium.pf2e.conditionitems.Item.lDVqvLKA6eF3Df60",
-    "enfeebled": "Compendium.pf2e.conditionitems.Item.MIRkyAjyBeXivMa7",
-    "quickened": "Compendium.pf2e.conditionitems.Item.nlCjDvLMf2EkV2dl",
-    "fleeing": "Compendium.pf2e.conditionitems.Item.sDPxOjQ9kx2RZE8D",
-    "frightened": "Compendium.pf2e.conditionitems.Item.TBSHQspnbcqxsmjL",
-    "dazzled": "Compendium.pf2e.conditionitems.Item.TkIyaNPgTZFBCCuh",
-    "restrained": "Compendium.pf2e.conditionitems.Item.VcDeM8A5oI6VqhbM",
-    "blinded": "Compendium.pf2e.conditionitems.Item.XgEqL1kFApUbl5Z2",
-    "slowed": "Compendium.pf2e.conditionitems.Item.xYTAsEpcJE1Ccni3",
-    "confused": "Compendium.pf2e.conditionitems.Item.yblD8fOR1J8rDwEQ",
-    "invisible": "Compendium.pf2e.conditionitems.Item.zJxUflt9np0q4yML",
-    "damage": "Damage"
-};
-const PF2E_CONDITIONS = Object.keys(PF2E_CONDITION_MAP);
-const PF2E_CONDITION_SET = new Set(PF2E_CONDITIONS);
-const VALUED_CONDITIONS = ["doomed", "drained", "stunned", "stupefied", "sickened", "clumsy", "enfeebled", "quickened", "frightened", "slowed"];
-const VALUED_CONDITION_SET = new Set(VALUED_CONDITIONS);
-const DAMAGE_TYPES = ["acid", "bleed", "bludgeoning", "cold", "electricity", "fire", "force", "mental", "piercing", "poison", "slashing", "sonic", "spirit", "vitality", "void"];
+import { MODULE_ID, PF2E_CONDITION_MAP, PF2E_CONDITION_SET, SORTED_DAMAGE_TYPES, AUTOMATION_OUTCOME_BY_LABEL } from "./constants.js";
 
-const SORTED_DAMAGE_TYPES = [...DAMAGE_TYPES].sort((left, right) => right.length - left.length);
-const AUTOMATION_OUTCOME_BY_LABEL = new Map([
-    ["critical success", "criticalSuccess"],
-    ["success", "success"],
-    ["failure", "failure"],
-    ["critical failure", "criticalFailure"]
-]);
-
-function uniqueBy(values, keyFn, mapFn = (value) => value) {
-    const uniqueValues = [];
-    const seen = new Set();
-
-    for (const value of values) {
-        const key = keyFn(value);
-        if (!key || seen.has(key)) continue;
-        seen.add(key);
-        uniqueValues.push(mapFn(value));
-    }
-
-    return uniqueValues;
+function localize(path) {
+    return game.i18n.localize(i18nKey(path));
 }
 
 function normalizeText(value) {
@@ -122,12 +69,8 @@ function convertAutomationHtmlToShortText(content) {
 }
 
 function getShortDamageTags(text, prefix) {
-    const escapedPrefix = prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(`\\{${escapedPrefix}([^-{}]+)-([^{}]+)\\}`, "ig");
-    return Array.from(String(text ?? "").matchAll(regex), (match) => ({
-        formula: match[1].trim(),
-        damageType: match[2].trim()
-    }));
+    return Array.from(String(text ?? "").matchAll(/\{([^{}]+)\}/g), (match) => parseShortDamageTag(match[1].trim(), prefix))
+        .filter(Boolean).map(({ formula, type }) => ({ formula, damageType: type }));
 }
 
 function getAutomationLineOutcome(line) {
@@ -238,17 +181,27 @@ function extractAutomationConditions(line) {
 }
 
 export {
-    DAMAGE_TYPES,
-    PF2E_CONDITIONS,
-    PF2E_CONDITION_MAP,
-    PF2E_CONDITION_SET,
-    VALUED_CONDITION_SET,
+    localize,
+    getElement,
+    getDocument,
+    i18nKey,
     convertAutomationHtmlToShortText,
     convertAutomationText,
     createDamageSignature,
     extractAutomationConditions,
     extractDamageSpecs,
     getAutomationLineOutcome,
-    normalizeText,
-    uniqueBy
+    normalizeText
 };
+
+function getElement(renderedHtml) {
+    return renderedHtml instanceof Element || renderedHtml instanceof DocumentFragment ? renderedHtml : renderedHtml?.[0] ?? null;
+}
+
+function getDocument(element) {
+    return element.ownerDocument;
+}
+
+function i18nKey(path) {
+    return `${MODULE_ID}.${path}`;
+}

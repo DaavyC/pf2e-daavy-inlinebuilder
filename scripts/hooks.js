@@ -1,59 +1,25 @@
-import { MODULE_ID, localize } from "./config.js";
+import { MODULE_ID, DAMAGE_TABLES, DC_TABLE, TEMPLATE_CONFIG, DAMAGE_TYPES, PF2E_CONDITIONS, PF2E_CONDITION_MAP, PF2E_CONDITION_SET, VALUED_CONDITION_SET, INLINEBUILDER_LEVEL_CONTROL_PARTIAL, INLINEBUILDER_ICON_SEGMENT_PARTIAL, INLINEBUILDER_DAMAGE_TYPE_SELECT_PARTIAL, MAIN_TEMPLATE_PART, CONDITION_LABEL_BY_SLUG, DMG_SUGGEST_LEVEL_MIN, DMG_SUGGEST_LEVEL_MAX, AUTOMATION_FIELDS } from "./constants.js";
 import {
     convertAutomationHtmlToShortText,
     convertAutomationText,
-    DAMAGE_TYPES,
-    PF2E_CONDITIONS,
-    PF2E_CONDITION_MAP,
-    PF2E_CONDITION_SET,
-    VALUED_CONDITION_SET
+    localize,
+    i18nKey,
+    getElement
 } from "./utils.js";
+import { applyTheme } from "./settings.js";
 
-const DAMAGE_TABLES = {
-    area: {
-        limited: { '-1': '1d6', 0: '1d10', 1: '2d6', 2: '3d6', 3: '4d6', 4: '5d6', 5: '6d6', 6: '7d6', 7: '8d6', 8: '9d6', 9: '10d6', 10: '11d6', 11: '12d6', 12: '13d6', 13: '14d6', 14: '15d6', 15: '16d6', 16: '17d6', 17: '18d6', 18: '19d6', 19: '20d6', 20: '21d6', 21: '22d6', 22: '23d6', 23: '24d6', 24: '25d6' },
-        unlimited: { '-1': '1d4', 0: '1d6', 1: '2d4', 2: '2d6', 3: '2d8', 4: '3d6', 5: '2d10', 6: '4d6', 7: '4d6', 8: '5d6', 9: '5d6', 10: '6d6', 11: '6d6', 12: '5d8', 13: '7d6', 14: '4d12', 15: '8d6', 16: '8d6', 17: '8d6', 18: '9d6', 19: '9d6', 20: '6d10', 21: '10d6', 22: '8d8', 23: '11d6', 24: '11d6' }
-    },
-    strike: {
-        extreme: { '-1': '1d6+1', 0: '1d6+3', 1: '1d8+4', 2: '1d12+4', 3: '1d12+8', 4: '2d10+7', 5: '2d12+7', 6: '2d12+10', 7: '2d12+12', 8: '2d12+15', 9: '2d12+17', 10: '2d12+20', 11: '2d12+22', 12: '3d12+19', 13: '3d12+21', 14: '3d12+24', 15: '3d12+26', 16: '3d12+29', 17: '3d12+31', 18: '3d12+34', 19: '4d12+29', 20: '4d12+32', 21: '4d12+34', 22: '4d12+37', 23: '4d12+39', 24: '4d12+42' },
-        high: { '-1': '1d4+1', 0: '1d6+2', 1: '1d6+3', 2: '1d10+4', 3: '1d10+6', 4: '2d8+5', 5: '2d8+7', 6: '2d8+9', 7: '2d10+9', 8: '2d10+11', 9: '2d10+13', 10: '2d12+13', 11: '2d12+15', 12: '3d10+14', 13: '3d10+16', 14: '3d10+18', 15: '3d12+17', 16: '3d12+18', 17: '3d12+19', 18: '3d12+20', 19: '4d10+20', 20: '4d10+22', 21: '4d10+24', 22: '4d10+26', 23: '4d12+24', 24: '4d12+26' },
-        moderate: { '-1': '1d4', 0: '1d4+2', 1: '1d6+2', 2: '1d8+4', 3: '1d8+6', 4: '2d6+5', 5: '2d6+6', 6: '2d6+8', 7: '2d8+8', 8: '2d8+9', 9: '2d8+11', 10: '2d10+11', 11: '2d10+12', 12: '3d8+12', 13: '3d8+14', 14: '3d8+15', 15: '3d10+14', 16: '3d10+15', 17: '3d10+16', 18: '3d10+17', 19: '4d8+17', 20: '4d8+19', 21: '4d8+20', 22: '4d8+22', 23: '4d10+20', 24: '4d10+22' },
-        low: { '-1': '1d4', 0: '1d4+1', 1: '1d4+2', 2: '1d6+3', 3: '1d6+5', 4: '2d4+4', 5: '2d4+6', 6: '2d4+7', 7: '2d6+6', 8: '2d6+8', 9: '2d6+9', 10: '2d6+10', 11: '2d8+10', 12: '3d6+10', 13: '3d6+11', 14: '3d6+13', 15: '3d6+14', 16: '3d6+15', 17: '3d6+16', 18: '3d6+17', 19: '4d6+14', 20: '4d6+15', 21: '4d6+17', 22: '4d6+18', 23: '4d6+19', 24: '4d6+21' }
-    }
-};
+const proseMirrorViews = new WeakMap();
 
-const DC_TABLE = {
-    extreme: { '-1': 19, 0: 19, 1: 20, 2: 22, 3: 23, 4: 25, 5: 26, 6: 27, 7: 29, 8: 30, 9: 32, 10: 33, 11: 34, 12: 36, 13: 37, 14: 39, 15: 40, 16: 41, 17: 43, 18: 44, 19: 46, 20: 47, 21: 48, 22: 50, 23: 51, 24: 52 },
-    high: { '-1': 16, 0: 16, 1: 17, 2: 18, 3: 20, 4: 21, 5: 22, 6: 24, 7: 25, 8: 26, 9: 28, 10: 29, 11: 30, 12: 32, 13: 33, 14: 34, 15: 36, 16: 37, 17: 38, 18: 40, 19: 41, 20: 42, 21: 44, 22: 45, 23: 46, 24: 48 },
-    moderate: { '-1': 13, 0: 13, 1: 14, 2: 15, 3: 17, 4: 18, 5: 19, 6: 21, 7: 22, 8: 23, 9: 25, 10: 26, 11: 27, 12: 29, 13: 30, 14: 31, 15: 33, 16: 34, 17: 35, 18: 37, 19: 38, 20: 39, 21: 41, 22: 42, 23: 43, 24: 45 }
-};
-
-const TEMPLATE_CONFIG = {
-    types: [
-        { value: 'burst', icon: 'fa-circle', tooltipKey: 'templateTypes.burst' },
-        { value: 'cone', icon: 'fa-angle-left', tooltipKey: 'templateTypes.cone' },
-        { value: 'square', icon: 'fa-square', tooltipKey: 'templateTypes.square' },
-        { value: 'line', icon: 'fa-grip-lines', tooltipKey: 'templateTypes.line' }
-    ],
-    damageTypes: ['fire', 'cold', 'electricity', 'acid', 'sonic', 'force', 'mental', 'poison', 'bleed', 'spirit', 'vitality', 'void', 'bludgeoning', 'piercing', 'slashing'],
-    saveTypes: [
-        { value: 'fortitude', icon: 'fa-chess-rook', tooltipKey: 'saveTypes.fortitude' },
-        { value: 'reflex', icon: 'fa-person-running', tooltipKey: 'saveTypes.reflex' },
-        { value: 'will', icon: 'fa-brain', tooltipKey: 'saveTypes.will' }
-    ],
-    showDCOptions: [
-        { value: 'all', icon: 'fa-users', tooltipKey: 'showDCOptions.all' },
-        { value: 'owner', icon: 'fa-user', tooltipKey: 'showDCOptions.owner' },
-        { value: 'gm', icon: 'fa-crown', tooltipKey: 'showDCOptions.gm' },
-        { value: 'none', icon: 'fa-eye-slash', tooltipKey: 'showDCOptions.none' }
-    ],
-    traits: [
-        { value: 'area-damage', icon: 'fa-burst', tooltipKey: 'traits.areaDamage' },
-        { value: 'splash', icon: 'fa-droplet', tooltipKey: 'traits.splash' },
-        { value: 'persistent', icon: 'fa-clock', tooltipKey: 'traits.persistent' }
-    ]
-};
-
+function registerProseMirrorViews() {
+  return Hooks.on('createProseMirrorEditor', (_uuid, plugins) => {
+    plugins.inlineBuilder = new foundry.prosemirror.Plugin({
+      view: view => {
+        proseMirrorViews.set(view.dom, view);
+        return { destroy: () => proseMirrorViews.delete(view.dom) };
+      }
+    });
+  });
+}
 
 function getEditorEditable(editorRef) {
   if (!editorRef) return null;
@@ -61,6 +27,22 @@ function getEditorEditable(editorRef) {
   return editorRef.querySelector?.('.ProseMirror, [contenteditable="true"], .editor-content')
     ?? editorRef.closest?.('.editor')?.querySelector?.('.ProseMirror, [contenteditable="true"], .editor-content')
     ?? null;
+}
+
+function editorHtml(editable) {
+  const view = proseMirrorViews.get(editable);
+  return view ? foundry.prosemirror.dom.serializeString(view.state.doc.content) : editable.innerHTML;
+}
+
+function writeEditorHtml(editable, html) {
+  const view = proseMirrorViews.get(editable);
+  if (view) {
+    const content = foundry.prosemirror.dom.parseString(html).content;
+    view.dispatch(view.state.tr.replaceWith(0, view.state.doc.content.size, content));
+  } else {
+    editable.innerHTML = html;
+    editable.dispatchEvent(new Event('input', { bubbles: true }));
+  }
 }
 
 function getInputValue(input) {
@@ -85,17 +67,6 @@ function clampNumber(value, min, max) {
 function parseInteger(value, fallback = 0) {
   const number = parseInt(value, 10);
   return Number.isFinite(number) ? number : fallback;
-}
-
-function clampConditionValue(value) {
-  return clampNumber(parseInteger(value, 1), 1, 10);
-}
-
-function getHookElement(html) {
-  if (html instanceof Element || html instanceof DocumentFragment) return html;
-  if (html?.[0] instanceof HTMLElement) return html[0];
-  if (typeof html?.querySelector === 'function') return html;
-  return null;
 }
 
 function findFirstEditorDivider(raw) {
@@ -130,48 +101,18 @@ function automationLinesToParagraphHtml(text, converter = line => line) {
     if (idx >= 0) {
       const label = converted.slice(0, idx + 1);
       const rest = converted.slice(idx + 2);
-      return `<p><strong>${label}</strong> ${escapeHtml(rest)}</p>`;
+      return `<p><strong>${escapeHtml(label)}</strong> ${escapeHtml(rest)}</p>`;
     }
     return `<p>${escapeHtml(converted)}</p>`;
   }).join('');
 }
 
 
-const foundryApplicationApi = globalThis.foundry?.applications?.api ?? {};
-const ApplicationV2 = foundryApplicationApi.ApplicationV2 ?? class {};
-const HandlebarsApplicationMixin = foundryApplicationApi.HandlebarsApplicationMixin ?? ((BaseApplication) => BaseApplication);
-const INLINEBUILDER_LEVEL_CONTROL_PARTIAL = `
-<div class="inlinebuilder-row">
-  <div class="inlinebuilder-label">
-    <label>{{labels.level}}</label>
-    <span>{{labels.creatureLevel}}</span>
-  </div>
-  <div class="inlinebuilder-control dmg-level-row">
-    <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="-1">&minus;</button>
-    <span id="{{levelControlId}}" class="dmg-level-value">{{currentLevel}}</span>
-    <button type="button" class="dmg-level-btn" data-action="adjustLevel" data-delta="1">+</button>
-  </div>
-</div>`;
-const INLINEBUILDER_ICON_SEGMENT_PARTIAL = `
-{{#each options}}
-<button type="button" class="icon-btn {{../buttonClass}}{{#if (eq this.value ../activeValue)}} active{{/if}}" data-value="{{this.value}}" data-tooltip="{{this.tooltip}}">
-  <i class="fas {{this.icon}}"></i>
-</button>
-{{/each}}`;
-const INLINEBUILDER_DAMAGE_TYPE_SELECT_PARTIAL = `
-<select{{#if damageTypeSelect.id}} id="{{damageTypeSelect.id}}"{{/if}} name="{{damageTypeSelect.name}}">
-  <option value="">{{labels.selectPlaceholder}}</option>
-  {{#each damageTypes}}
-  <option value="{{this}}">{{this}}</option>
-  {{/each}}
-</select>`;
-
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 function registerInlineBuilderPartials() {
-  if (globalThis.Handlebars?.registerPartial) {
-    globalThis.Handlebars.registerPartial('inlinebuilderLevelControl', INLINEBUILDER_LEVEL_CONTROL_PARTIAL);
-    globalThis.Handlebars.registerPartial('inlinebuilderIconSegment', INLINEBUILDER_ICON_SEGMENT_PARTIAL);
-    globalThis.Handlebars.registerPartial('inlinebuilderDamageTypeSelect', INLINEBUILDER_DAMAGE_TYPE_SELECT_PARTIAL);
-  }
+  Handlebars.registerPartial('inlinebuilderLevelControl', INLINEBUILDER_LEVEL_CONTROL_PARTIAL);
+  Handlebars.registerPartial('inlinebuilderIconSegment', INLINEBUILDER_ICON_SEGMENT_PARTIAL);
+  Handlebars.registerPartial('inlinebuilderDamageTypeSelect', INLINEBUILDER_DAMAGE_TYPE_SELECT_PARTIAL);
 }
 
 function getInlineBuilderDialogOptions({
@@ -179,7 +120,6 @@ function getInlineBuilderDialogOptions({
   classes = [],
   tag = 'div',
   titleKey,
-  titleFallback,
   icon,
   width,
   actions = {},
@@ -190,7 +130,7 @@ function getInlineBuilderDialogOptions({
     classes: ['inlinebuilder', ...classes],
     tag,
     window: {
-      title: localize(titleKey, titleFallback),
+      title: i18nKey(titleKey),
       icon,
       ...window
     },
@@ -200,11 +140,6 @@ function getInlineBuilderDialogOptions({
 }
 
 registerInlineBuilderPartials();
-
-const MAIN_TEMPLATE_PART = {
-  form: { template: `modules/${MODULE_ID}/templates/main.hbs` }
-};
-
 
 let currentNpcActor = null;
 
@@ -257,15 +192,8 @@ function removeConditionTag(text, slug) {
 }
 
 
-const AUTOMATION_FIELDS = [
-  ['sc', () => localize('automation.criticalSuccess', 'Critical Success:'), '#auto-sc', 'autoSc'],
-  ['s', () => localize('automation.success', 'Success:'), '#auto-s', 'autoS'],
-  ['f', () => localize('automation.failure', 'Failure:'), '#auto-f', 'autoF'],
-  ['fc', () => localize('automation.criticalFailure', 'Critical Failure:'), '#auto-fc', 'autoFc']
-];
-
 function getAutomationFields() {
-  return AUTOMATION_FIELDS.map(([key, label, selector, name]) => [key, label(), selector, name]);
+  return AUTOMATION_FIELDS.map(([key, labelKey, selector, name]) => [key, localize(labelKey), selector, name]);
 }
 
 function getAutomationResultByLabel() {
@@ -286,7 +214,6 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     id: 'inlinebuilder-damage-dialog',
     classes: ['pf2e-daavy-inlinebuilder-comfort-dialog'],
     titleKey: 'window.addDamage',
-    titleFallback: 'Add Damage',
     icon: 'fas fa-bolt',
     width: 320,
     actions: {
@@ -309,12 +236,12 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
       damageTypeSelect: { name: 'type-suggest' },
       isPersistent: this.selectedMode === 'persistent',
       labels: {
-        damage: localize('labels.damage', 'Damage'),
-        formulaOnly: localize('labels.formulaOnly', 'Formula only'),
-        type: localize('labels.type', 'Type'),
-        damageType: localize('labels.damageTypeLower', 'Damage type'),
-        selectPlaceholder: localize('labels.selectPlaceholder', '-- Select --'),
-        add: localize('labels.add', 'Add')
+        damage: localize('labels.damage'),
+        formulaOnly: localize('labels.formulaOnly'),
+        type: localize('labels.type'),
+        damageType: localize('labels.damageTypeLower'),
+        selectPlaceholder: localize('labels.selectPlaceholder'),
+        add: localize('labels.add')
       }
     };
   }
@@ -330,11 +257,11 @@ class DamageDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     const formula = damageInput.value.trim().replace(/\s+/g, '');
     const typeSuggestValue = typeSuggest?.value || '';
     if (!formula) {
-      ui.notifications.warn(localize('warnings.damageFormulaRequired', 'Damage: A damage formula is required.'));
+      ui.notifications.warn(localize('warnings.damageFormulaRequired'));
       return;
     }
     if (!typeSuggestValue) {
-      ui.notifications.warn(localize('warnings.damageTypeRequired', 'Damage: Please select a damage type.'));
+      ui.notifications.warn(localize('warnings.damageTypeRequired'));
       return;
     }
 
@@ -354,22 +281,16 @@ function openDamageDialog(targetInput, mode = 'normal') {
   new DamageDialogV2({
     targetInput,
     mode,
-    window: { title: mode === 'persistent' ? localize('window.addPersistentDamage', 'Add Persistent Damage') : localize('window.addDamage', 'Add Damage') }
+    window: { title: mode === 'persistent' ? localize('window.addPersistentDamage') : localize('window.addDamage') }
   }).render(true);
 }
 
-
-const CONDITION_LABEL_BY_SLUG = new Map(PF2E_CONDITIONS.map(slug => [
-  slug,
-  slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-]));
 
 class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-condition-picker',
     classes: ['pf2e-daavy-inlinebuilder-picker-dialog'],
     titleKey: 'window.selectCondition',
-    titleFallback: 'Select Condition',
     icon: 'fas fa-list-check',
     width: 480,
     actions: {
@@ -395,20 +316,20 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
         const value = this.currentConditions.get(slug) ?? 1;
 
         let actionClass = '';
-        let actionTitle = localize('tooltips.clickAddCondition', 'Click to add condition');
+        let actionTitle = localize('tooltips.clickAddCondition');
         let iconClass = '';
         let iconPath = `systems/pf2e/icons/conditions/${slug}.webp`;
         let label = CONDITION_LABEL_BY_SLUG.get(slug) ?? slug;
 
         if (slug === 'persistent-damage') {
           actionClass = 'add-action';
-          actionTitle = localize('tooltips.clickAddPersistentDamage', 'Click to add persistent damage');
+          actionTitle = localize('tooltips.clickAddPersistentDamage');
         } else if (slug === 'damage') {
           actionClass = 'add-action';
-          actionTitle = localize('tooltips.clickAddDamage', 'Click to add damage');
+          actionTitle = localize('tooltips.clickAddDamage');
           iconClass = 'fas fa-bolt';
           iconPath = '';
-          label = localize('labels.damage', 'Damage');
+          label = localize('labels.damage');
         }
 
         return {
@@ -457,24 +378,6 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
         await ConditionPickerDialogV2.removeCondition.call(self, e, btn);
       });
     });
-
-    html.querySelectorAll('.cond-value-input').forEach(input => {
-      input.addEventListener('change', (e) => {
-        e.stopPropagation();
-        const btn = e.target.closest('.cond-btn-card');
-        if (!btn) return;
-
-        const slug = btn.dataset.cond;
-        const value = clampConditionValue(e.target.value);
-        self.currentConditions.set(slug, value);
-        btn.classList.add('active');
-        self._updateConditionInTarget(slug, value);
-      });
-
-      input.addEventListener('click', (e) => {
-        e.stopPropagation();
-      });
-    });
   }
 
   _updateConditionInTarget(slug, value) {
@@ -488,12 +391,11 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
   _setTargetValue(value) {
     if (!this.targetInput) return;
     setInputValue(this.targetInput, value);
-    this.initialValue = value;
   }
 
   _setCardValue(target, value) {
-    const valueInput = target.querySelector('.cond-value-input');
-    if (valueInput) valueInput.value = value;
+    const valueLabel = target.querySelector('.cond-value');
+    if (valueLabel) valueLabel.textContent = String(value);
   }
 
   static async selectCondition(_event, target) {
@@ -502,13 +404,7 @@ class ConditionPickerDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) 
     const slug = target.dataset.cond;
     if (!slug) return;
 
-    const isValued = VALUED_CONDITION_SET.has(slug);
     let value = 1;
-
-    const valueInput = target.querySelector('.cond-value-input');
-    if (valueInput && isValued) {
-      value = clampConditionValue(valueInput.value);
-    }
 
     if (dialog.currentConditions.has(slug)) {
       value = Math.min(10, (dialog.currentConditions.get(slug) || 1) + 1);
@@ -557,7 +453,6 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     id: 'inlinebuilder-comfort-edit',
     classes: ['pf2e-daavy-inlinebuilder-comfort-dialog'],
     titleKey: 'window.textEditor',
-    titleFallback: 'Text Editor',
     icon: 'fas fa-edit',
     width: 520,
     actions: {
@@ -579,8 +474,8 @@ class ComfortEditDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
       comfortEditTemplate: true,
       content: this.initialValue,
       labels: {
-        addCondition: localize('tooltips.addCondition', 'Add Condition'),
-        save: localize('labels.saveAction', 'Save')
+        addCondition: localize('tooltips.addCondition'),
+        save: localize('labels.saveAction')
       }
     };
   }
@@ -614,31 +509,29 @@ async function showComfortEditDialog(targetInput) {
       initialValue,
       callback: resolve
     });
+    dialog.addEventListener('close', () => resolve(undefined), { once: true });
     dialog.render(true);
   });
 }
 
 
-const DMG_SUGGEST_LEVEL_MIN = -1;
-const DMG_SUGGEST_LEVEL_MAX = 24;
-
 function getSuggestionLabels() {
   return {
-    level: localize('labels.level', 'Level'),
-    creatureLevel: localize('labels.creatureLevel', 'Creature level'),
-    intensity: localize('labels.intensity', 'Intensity'),
-    dcCategory: localize('labels.dcCategory', 'DC category'),
-    type: localize('labels.type', 'Type'),
-    damageProfile: localize('labels.damageProfile', 'Damage profile'),
-    area: localize('labels.area', 'Area'),
-    strike: localize('labels.strike', 'Strike'),
-    damageCategory: localize('labels.damageCategory', 'Damage category'),
-    unlimited: localize('labels.unlimited', 'Unlimited'),
-    limited: localize('labels.limited', 'Limited'),
-    extreme: localize('labels.extreme', 'Extreme'),
-    high: localize('labels.high', 'High'),
-    moderate: localize('labels.moderate', 'Moderate'),
-    low: localize('labels.low', 'Low')
+    level: localize('labels.level'),
+    creatureLevel: localize('labels.creatureLevel'),
+    intensity: localize('labels.intensity'),
+    dcCategory: localize('labels.dcCategory'),
+    type: localize('labels.type'),
+    damageProfile: localize('labels.damageProfile'),
+    area: localize('labels.area'),
+    strike: localize('labels.strike'),
+    damageCategory: localize('labels.damageCategory'),
+    unlimited: localize('labels.unlimited'),
+    limited: localize('labels.limited'),
+    extreme: localize('labels.extreme'),
+    high: localize('labels.high'),
+    moderate: localize('labels.moderate'),
+    low: localize('labels.low')
   };
 }
 
@@ -650,7 +543,7 @@ function getIntensityOptions(values) {
 function getLeveledTableValue(table, fallback) {
   const level = getCreatureLevelFromSheet();
   if (level === null) return fallback;
-  return table[level] || table[String(level)] || fallback;
+  return table[level] ?? fallback;
 }
 
 function getDefaultDamageFormula() {
@@ -663,12 +556,14 @@ function getDefaultDC() {
 
 function renderNpcLevelDialog(DialogClass, mapResult = result => result) {
   if (getCreatureLevelFromSheet() === null) {
-    ui.notifications.warn(localize('warnings.noNpcSheet', 'No open NPC sheet found.'));
+    ui.notifications.warn(localize('warnings.noNpcSheet'));
     return Promise.resolve(null);
   }
 
   return new Promise(resolve => {
-    new DialogClass({ callback: result => resolve(mapResult(result)) }).render(true);
+    const dialog = new DialogClass({ callback: result => resolve(mapResult(result)) });
+    dialog.addEventListener('close', () => resolve(null), { once: true });
+    dialog.render(true);
   });
 }
 
@@ -685,7 +580,6 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-dc-suggestion',
     titleKey: 'window.dcSuggestion',
-    titleFallback: 'DC Suggestion',
     icon: 'fas fa-shield-alt',
     width: 320,
     actions: {
@@ -723,10 +617,10 @@ class DCSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2) {
     const level = app.currentLevel;
     const intensity = target?.dataset?.intensity ?? app.selectedIntensity;
     const table = DC_TABLE[intensity];
-    const dc = table[level] ?? table[String(level)];
+    const dc = table[level];
 
     if (!dc) {
-      ui.notifications.warn(localize('warnings.dcNotFound', 'DC not found for this level.'));
+      ui.notifications.warn(localize('warnings.dcNotFound'));
       return;
     }
 
@@ -739,7 +633,6 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-damage-suggestion',
     titleKey: 'window.damageSuggestion',
-    titleFallback: 'Damage Suggestion',
     icon: 'fas fa-dragon',
     width: 320,
     actions: {
@@ -782,8 +675,7 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
     this.selectedType = type;
     this.currentStep = 2;
     this.selectedSub = null;
-    await this.close();
-    this.render(true);
+    await this.render(true);
   }
 
   static async selectSub(_event, target) {
@@ -800,19 +692,19 @@ class DamageSuggestionDialogV2 extends HandlebarsApplicationMixin(ApplicationV2)
 
   static async confirmDamage(_event, _target) {
     if (!this.selectedType || !this.selectedSub) {
-      ui.notifications.warn(localize('warnings.damageTypeIntensityRequired', 'Please select a damage type and intensity.'));
+      ui.notifications.warn(localize('warnings.damageTypeIntensityRequired'));
       return;
     }
 
     const table = DAMAGE_TABLES[this.selectedType]?.[this.selectedSub];
     if (!table) {
-      ui.notifications.warn(localize('warnings.damageTableNotFound', 'Damage table not found.'));
+      ui.notifications.warn(localize('warnings.damageTableNotFound'));
       return;
     }
 
-    const formula = table[this.currentLevel] || table[String(this.currentLevel)];
+    const formula = table[this.currentLevel];
     if (!formula) {
-      ui.notifications.warn(localize('warnings.formulaNotFound', 'Formula not found for this level.'));
+      ui.notifications.warn(localize('warnings.formulaNotFound'));
       return;
     }
 
@@ -855,9 +747,9 @@ function parseDescriptionBlock(text) {
   const out = { template: null, check: null, damage: null };
   if (!text) return out;
 
-  const templateLabel = escapeRegExp(localize('description.template', 'Template:'));
-  const savingThrowLabel = escapeRegExp(localize('description.savingThrow', 'Saving Throw:'));
-  const damageLabel = escapeRegExp(localize('description.damage', 'Damage:'));
+  const templateLabel = escapeRegExp(localize('description.template'));
+  const savingThrowLabel = escapeRegExp(localize('description.savingThrow'));
+  const damageLabel = escapeRegExp(localize('description.damage'));
 
   const templateMatch = text.match(new RegExp(`(?:Template:|${templateLabel})\\s*@Template\\[type:(\\w+)\\|distance:(\\d+)\\]`, 'i'));
   if (templateMatch) {
@@ -875,7 +767,7 @@ function parseDescriptionBlock(text) {
   }
 
   const damageMatch = text.match(new RegExp(`(?:Damage:|${damageLabel})\\s*@Damage\\[([^[]+)\\[(\\w+)\\](?:\\|traits:([^\\]]*))?\\]`, 'i'));
-  if (out.check?.basic === true && damageMatch) {
+  if (damageMatch) {
     const traits = damageMatch[3]
       ? damageMatch[3].split(',').map(trait => trait.trim()).filter(Boolean)
       : [];
@@ -895,7 +787,7 @@ function detectExistingAutomations(editorRef) {
   const automationResultByLabel = getAutomationResultByLabel();
   const editable = getEditorEditable(editorRef);
   if (!editable) return result;
-  const html = editable.innerHTML || '';
+  const html = editorHtml(editable);
   const lastDivider = findLastHtmlDivider(html);
   let targetHtml = html;
   if (lastDivider) {
@@ -906,8 +798,10 @@ function detectExistingAutomations(editorRef) {
   tmp.querySelectorAll('p').forEach(p => {
     const strong = p.querySelector('strong');
     if (!strong) return;
-    const label = strong.innerText.trim();
-    let content = p.innerHTML.replace(strong.outerHTML, '').trim();
+    const label = strong.textContent.trim();
+    const paragraph = p.cloneNode(true);
+    paragraph.querySelector('strong').remove();
+    let content = paragraph.textContent.trim();
     content = convertAutomationHtmlToShortText(content.replace(/^[:\s]+/, ''));
     const resultKey = automationResultByLabel.get(label);
     if (resultKey) result[resultKey] = content;
@@ -915,32 +809,29 @@ function detectExistingAutomations(editorRef) {
   return result;
 }
 
-function applyAutomationToEditorContent(editorRef, applyText, silent = false) {
+function applyAutomationToEditorContent(editorRef, applyText) {
   const editable = getEditorEditable(editorRef);
   if (!editable) return false;
-  const raw = editable.innerHTML || '';
-  const dividers = findHtmlDividers(raw);
-  const lastDivider = findLastHtmlDivider(raw);
-  if (!applyText.trim()) {
-    if (lastDivider) {
-      const content = raw.substring(lastDivider.index + lastDivider[0].length).trim();
-      if (getAutomationFields().some(([, label]) => content.includes(label)) || dividers.length > 1) {
-        editable.innerHTML = raw.substring(0, lastDivider.index).trim();
-        editable.dispatchEvent(new Event('input', { bubbles: true }));
-        if (!silent) ui.notifications.info(localize('notifications.automationCleared', 'Automation cleared!'));
-        return true;
-      }
-    }
-    return false;
-  }
-  let newContent = (dividers.length > 1 && lastDivider)
-    ? raw.substring(0, lastDivider.index + lastDivider[0].length)
-    : (raw && raw.trim().length > 0 ? raw + '<hr>' : raw);
-  newContent += automationLinesToParagraphHtml(applyText, convertAutomationText);
-  editable.innerHTML = newContent;
-  editable.dispatchEvent(new Event('input', { bubbles: true }));
-  if (!silent) ui.notifications.info(localize('notifications.automationUpdated', 'Automation text updated in description!'));
+  const raw = editorHtml(editable);
+  const newContent = updatedAutomationHtml(raw, applyText);
+  if (newContent === raw) return false;
+  writeEditorHtml(editable, newContent);
   return true;
+}
+
+function updatedAutomationHtml(raw, applyText) {
+  const divider = findLastHtmlDivider(raw);
+  const section = document.createElement('div');
+  section.innerHTML = divider ? raw.slice(divider.index + divider[0].length) : raw;
+  const automationParagraphs = [...section.querySelectorAll('p')].filter(paragraph => {
+    const label = paragraph.querySelector('strong')?.textContent.trim();
+    return getAutomationFields().some(([, expected]) => expected === label);
+  });
+  const automationHtml = applyText.trim() ? automationLinesToParagraphHtml(applyText, convertAutomationText) : '';
+  if (!automationParagraphs.length) return automationHtml ? [raw, automationHtml].filter(Boolean).join('<hr>') : raw;
+  automationParagraphs.forEach(paragraph => paragraph.remove());
+  const beforeSection = divider ? raw.slice(0, divider.index).trim() : '';
+  return [beforeSection, section.innerHTML.trim(), automationHtml].filter(Boolean).join('<hr>');
 }
 
 
@@ -951,38 +842,29 @@ function localizeOption(option) {
 
 function getInlineBuilderLabels() {
   return {
-    sectionsAria: localize('labels.sectionsAria', 'Inline Builder sections'),
-    areaTemplate: localize('labels.areaTemplate', 'Area Template'),
-    damage: localize('labels.damage', 'Damage'),
-    savingThrow: localize('labels.savingThrow', 'Saving Throw'),
-    automations: localize('labels.automations', 'Automations'),
-    templateType: localize('labels.templateType', 'Template Type'),
-    areaShape: localize('labels.areaShape', 'Area shape'),
-    distance: localize('labels.distance', 'Distance'),
-    rangeInUnits: localize('labels.rangeInUnits', 'Range in units'),
-    decreaseDistance: localize('tooltips.decreaseDistance', 'Decrease (-5, Shift: -10)'),
-    increaseDistance: localize('tooltips.increaseDistance', 'Increase (+5, Shift: +10)'),
-    resetDistance: localize('tooltips.resetDistance', 'Reset (0)'),
-    formula: localize('labels.formula', 'Formula'),
-    damageExpression: localize('labels.damageExpression', 'Damage expression'),
-    suggestBasedOnLevel: localize('tooltips.suggestBasedOnLevel', 'Suggest based on level'),
-    damageType: localize('labels.damageType', 'Damage Type'),
-    selectType: localize('labels.selectType', 'Select a type'),
-    selectPlaceholder: localize('labels.selectPlaceholder', '-- Select --'),
-    traits: localize('labels.traits', 'Traits'),
-    characteristics: localize('labels.characteristics', 'Characteristics'),
-    save: localize('labels.save', 'Save'),
-    checkType: localize('labels.checkType', 'Check type'),
-    dc: localize('labels.dc', 'DC'),
-    difficultyClass: localize('labels.difficultyClass', 'Difficulty class'),
-    basic: localize('labels.basic', 'Basic'),
-    standardSave: localize('labels.standardSave', 'Standard save'),
-    basicSave: localize('tooltips.basicSave', 'Basic save'),
-    showAs: localize('labels.showAs', 'Show As'),
-    chatVisibility: localize('labels.chatVisibility', 'Chat visibility'),
-    addCondition: localize('tooltips.addCondition', 'Add Condition'),
-    textEditor: localize('tooltips.textEditor', 'Text Editor'),
-    apply: localize('labels.apply', 'Apply')
+    sectionsAria: localize('labels.sectionsAria'),
+    areaTemplate: localize('labels.areaTemplate'),
+    damage: localize('labels.damage'),
+    savingThrow: localize('labels.savingThrow'),
+    automations: localize('labels.automations'),
+    templateType: localize('labels.templateType'),
+    distance: localize('labels.distance'),
+    decreaseDistance: localize('tooltips.decreaseDistance'),
+    increaseDistance: localize('tooltips.increaseDistance'),
+    resetDistance: localize('tooltips.resetDistance'),
+    formula: localize('labels.formula'),
+    suggestBasedOnLevel: localize('tooltips.suggestBasedOnLevel'),
+    damageType: localize('labels.damageType'),
+    selectPlaceholder: localize('labels.selectPlaceholder'),
+    traits: localize('labels.traits'),
+    save: localize('labels.save'),
+    dc: localize('labels.dc'),
+    basic: localize('labels.basic'),
+    basicSave: localize('tooltips.basicSave'),
+    showAs: localize('labels.showAs'),
+    addCondition: localize('tooltips.addCondition'),
+    textEditor: localize('tooltips.textEditor'),
+    apply: localize('labels.apply')
   };
 }
 
@@ -990,7 +872,6 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = getInlineBuilderDialogOptions({
     id: 'inlinebuilder-dialog',
     titleKey: 'window.inlineBuilder',
-    titleFallback: 'Inline Builder',
     icon: 'fas fa-pen',
     width: 520,
     window: {
@@ -1218,7 +1099,7 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   static _getContentAboveFirstHR(editorRef) {
     const editable = getEditorEditable(editorRef);
     if (!editable) return '';
-    const raw = editable.innerHTML || '';
+    const raw = editorHtml(editable);
     const divider = findFirstEditorDivider(raw);
     const aboveHtml = raw.slice(0, divider?.index ?? raw.length).trim();
     if (!aboveHtml) return '';
@@ -1230,106 +1111,85 @@ class InlineBuilderDialog extends HandlebarsApplicationMixin(ApplicationV2) {
   static _applyToEditorContent(editorRef, applyText) {
     const editable = getEditorEditable(editorRef);
     if (!editable) { return false; }
-    const raw = editable.innerHTML || '';
+    const raw = editorHtml(editable);
     const divider = findFirstEditorDivider(raw);
     const fromHrOnward = divider
       ? (divider.isDash ? '<hr>' + raw.slice(divider.index + divider.text.length).trim() : raw.slice(divider.index).trim())
       : raw;
     const applyHtml = automationLinesToParagraphHtml(applyText);
     const newContent = applyHtml + (fromHrOnward.startsWith('<hr') ? fromHrOnward : '<hr>' + fromHrOnward);
-    editable.innerHTML = newContent;
-    editable.dispatchEvent(new Event('input', { bubbles: true }));
+    writeEditorHtml(editable, newContent);
     return true;
   }
 
-  static insertAll(_event, target) {
-    const app = this;
-    const form = target.closest('.inlinebuilder-content');
-    const lines = [];
-    const autoLines = [];
-    let basicSaveEnabled = false;
-
-    if (app.activeSections.has('template')) {
-      const type = app.selectedTemplateType;
-      const distanceVal = form.querySelector('#template-distance')?.value;
-      const distance = parseInteger(distanceVal, NaN);
-      if (!type) {
-        ui.notifications.warn(localize('warnings.areaTypeRequired', 'Area Template: Please select a type (Burst, Cone, Square, or Line).'));
-        return;
-      }
-      if (!Number.isFinite(distance) || distance <= 0) {
-        ui.notifications.warn(localize('warnings.areaDistanceRequired', 'Area Template: Distance must be greater than 0.'));
-        return;
-      }
-      const str = generateTemplateString(type, distance);
-      if (str) lines.push(`${localize('description.template', 'Template:')} ${str}`);
+  static async insertAll(_event, target) {
+    try {
+      const form = target.closest('.inlinebuilder-content');
+      const lines = builderLines(this, form);
+      const autoLines = this.activeSections.has('automation')
+        ? getAutomationFields().map(([, label, selector]) => {
+          const content = getInputValue(form.querySelector(selector));
+          return content ? `${label} ${content}` : '';
+        }).filter(Boolean)
+        : [];
+      if (!lines.length && !autoLines.length) throw new InvalidBuilderInput('warnings.sectionRequired');
+      await applyBuilderOutput(this, lines, autoLines);
+    } catch (error) {
+      if (!(error instanceof InvalidBuilderInput)) throw error;
+      ui.notifications.warn(localize(error.message));
     }
-
-    if (app.activeSections.has('check')) {
-      const saveType = app.selectedSaveType;
-      const dcVal = form.querySelector('#dc-value')?.value;
-      const dc = parseInteger(dcVal, NaN);
-      const basic = form.querySelector('#basic-save')?.checked ?? true;
-      basicSaveEnabled = basic;
-      const showDC = app.selectedShowDC;
-      if (!saveType) {
-        ui.notifications.warn(localize('warnings.saveTypeRequired', 'Saving Throw: Please select a save (Fortitude, Reflex, or Will).'));
-        return;
-      }
-      if (!Number.isFinite(dc) || dc <= 0) {
-        ui.notifications.warn(localize('warnings.dcRequired', 'Saving Throw: DC value must be greater than 0.'));
-        return;
-      }
-      const str = generateCheckString(saveType, String(dc), basic, showDC);
-      if (str) lines.push(`${localize('description.savingThrow', 'Saving Throw:')} ${str}`);
-    }
-
-    if (app.activeSections.has('damage') && basicSaveEnabled) {
-      const formula = (form.querySelector('#damage-formula')?.value ?? '').trim();
-      const damageType = form.querySelector('#damage-type')?.value ?? '';
-      const traits = Array.from(app.selectedTraits);
-      if (!formula) {
-        ui.notifications.warn(localize('warnings.damageFormulaRequired', 'Damage: A damage formula is required.'));
-        return;
-      }
-      if (!damageType) {
-        ui.notifications.warn(localize('warnings.damageTypeRequiredSelect', 'Damage: Please select a damage type (do not use "-- Select --").'));
-        return;
-      }
-      const str = generateDamageString(formula, damageType, traits);
-      if (str) lines.push(`${localize('description.damage', 'Damage:')} ${str}`);
-    }
-
-    if (app.activeSections.has('automation')) {
-      for (const [, label, selector] of getAutomationFields()) {
-        const value = getInputValue(form.querySelector(selector));
-        if (value) autoLines.push(`${label} ${value}`);
-      }
-    }
-
-    if (lines.length === 0 && autoLines.length === 0) {
-      ui.notifications.warn(localize('warnings.sectionRequired', 'Please select at least one section and fill in the fields.'));
-      return;
-    }
-
-    const applyText = lines.join('\n');
-    if (app.editorRef) {
-      const ok = lines.length > 0 ? InlineBuilderDialog._applyToEditorContent(app.editorRef, applyText) : true;
-      if (ok) {
-        if (app.activeSections.has('automation')) applyAutomationToEditorContent(app.editorRef, autoLines.join('\n'), true);
-        else applyAutomationToEditorContent(app.editorRef, '', true);
-        app.close();
-        ui.notifications.info(localize('notifications.applied', 'Applied to description!'));
-        return;
-      }
-    }
-    navigator.clipboard.writeText([applyText, autoLines.join('\n')].filter(Boolean).join('\n')).then(() => {
-      ui.notifications.info(localize('notifications.copiedNoEditor', 'Copied! (no active editor)'));
-      app.close();
-    }).catch(() => {
-      ui.notifications.error(localize('notifications.copyFailed', 'Failed to copy.'));
-    });
   }
+
+}
+
+class InvalidBuilderInput extends Error {}
+
+function builderTemplateLine(app, form) {
+  if (!app.activeSections.has('template')) return '';
+  const distance = parseInteger(form.querySelector('#template-distance').value, NaN);
+  if (!app.selectedTemplateType) throw new InvalidBuilderInput('warnings.areaTypeRequired');
+  if (!Number.isFinite(distance) || distance <= 0) throw new InvalidBuilderInput('warnings.areaDistanceRequired');
+  return `${localize('description.template')} ${generateTemplateString(app.selectedTemplateType, distance)}`;
+}
+
+function builderCheckLine(app, form) {
+  if (!app.activeSections.has('check')) return '';
+  const dc = parseInteger(form.querySelector('#dc-value').value, NaN);
+  if (!app.selectedSaveType) throw new InvalidBuilderInput('warnings.saveTypeRequired');
+  if (!Number.isFinite(dc) || dc <= 0) throw new InvalidBuilderInput('warnings.dcRequired');
+  const basic = form.querySelector('#basic-save').checked;
+  return `${localize('description.savingThrow')} ${generateCheckString(app.selectedSaveType, dc, basic, app.selectedShowDC)}`;
+}
+
+function builderDamageLine(app, form) {
+  if (!app.activeSections.has('damage')) return '';
+  const formula = form.querySelector('#damage-formula').value.trim();
+  const damageType = form.querySelector('#damage-type').value;
+  if (!formula) throw new InvalidBuilderInput('warnings.damageFormulaRequired');
+  if (!damageType) throw new InvalidBuilderInput('warnings.damageTypeRequired');
+  return `${localize('description.damage')} ${generateDamageString(formula, damageType, [...app.selectedTraits])}`;
+}
+
+function builderLines(app, form) {
+  return [builderTemplateLine(app, form), builderCheckLine(app, form), builderDamageLine(app, form)].filter(Boolean);
+}
+
+async function applyBuilderOutput(app, lines, autoLines) {
+  const applyText = lines.join('\n');
+  if (app.editorRef && (!lines.length || InlineBuilderDialog._applyToEditorContent(app.editorRef, applyText))) {
+    applyAutomationToEditorContent(app.editorRef, autoLines.join('\n'));
+    await app.close();
+    ui.notifications.info(localize('notifications.applied'));
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText([...lines, ...autoLines].join('\n'));
+  } catch (error) {
+    ui.notifications.error(localize('notifications.copyFailed'));
+    throw error;
+  }
+  ui.notifications.info(localize('notifications.copiedNoEditor'));
+  await app.close();
 }
 
 function openInlineBuilderDialog(editorRef = null) {
@@ -1341,7 +1201,7 @@ let editorInjectionFrame = null;
 const pendingEditorInjectionRoots = new Set();
 
 function queueInlineBuilderEditorInjection(root) {
-  const element = getHookElement(root) ?? root;
+  const element = getElement(root) ?? root;
   if (!(element instanceof Element || element instanceof DocumentFragment)) return;
 
   pendingEditorInjectionRoots.add(element);
@@ -1356,7 +1216,7 @@ function queueInlineBuilderEditorInjection(root) {
 }
 
 function injectInlineBuilderEditorButton(container) {
-  const root = getHookElement(container) ?? container;
+  const root = getElement(container) ?? container;
   if (!root) return;
 
   const editors = new Set();
@@ -1381,7 +1241,7 @@ function injectInlineBuilderEditorButton(container) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'inlinebuilder-editor-btn';
-    btn.setAttribute('data-tooltip', localize('window.inlineBuilder', 'Inline Builder'));
+    btn.setAttribute('data-tooltip', localize('window.inlineBuilder'));
     btn.innerHTML = '<i class="fa-solid fa-wand-sparkles fa-fw"></i>';
 
     btn.addEventListener('click', function (e) {
@@ -1392,6 +1252,7 @@ function injectInlineBuilderEditorButton(container) {
     });
 
     editor.appendChild(btn);
+    applyTheme(btn);
   });
 }
 
@@ -1410,6 +1271,7 @@ function handleRenderedSheet(app, html) {
 }
 
 function registerInlineBuilderHooks() {
+  registerProseMirrorViews();
   Hooks.on('renderActorSheet', handleRenderedSheet);
   Hooks.on('renderItemSheet', handleRenderedSheet);
   Hooks.on('renderApplicationV2', (app, html) => {
@@ -1438,8 +1300,8 @@ function registerInlineBuilderHooks() {
 
 function registerInlineBuilderKeybinding() {
   game.keybindings.register(MODULE_ID, 'openDialog', {
-    name: localize('keybindings.openDialog.name', 'Open Inline Builder'),
-    hint: localize('keybindings.openDialog.hint', 'Opens the Inline Builder window'),
+    name: localize('keybindings.openDialog.name'),
+    hint: localize('keybindings.openDialog.hint'),
     editable: [{ key: 'KeyT', modifiers: ['Control', 'Shift'] }],
     onDown: () => {
       openInlineBuilderDialog();

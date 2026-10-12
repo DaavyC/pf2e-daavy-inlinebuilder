@@ -1,6 +1,6 @@
-# 🛠️ PF2e Daavy's Inline Builder
+# PF2e Daavy's Inline Builder
 
-A **Foundry VTT** module for **Pathfinder Second Edition** that helps build PF2e inline text for actions.
+Create area templates, damage rolls, saving throws, and outcome effects in PF2e descriptions.
 
 ---
 
@@ -8,34 +8,37 @@ A **Foundry VTT** module for **Pathfinder Second Edition** that helps build PF2e
 
 ---
 
-## 🗂️ Features
+## Features
 
-- **📝 Editor Button** — Opens the builder from supported description editors.
-- **🎯 Area Templates** — Creates `@Template` text for burst, cone, square, and line areas.
-- **🔥 Damage Builder** — Creates `@Damage` text with type and traits.
-- **🛡️ Saving Throws** — Creates `@Check` text with save type, DC, basic save, and visibility.
-- **🔁 Existing Text** — Reads compatible descriptions and pre-fills the builder.
-- **📋 Clipboard Fallback** — Copies the output when no editor is available.
-- **🧩 PF2e Helpers** — Tools for DCs, damage, conditions, automation text, and PF2e inline links.
-- **🤖 Automation** — Handles saves, automation text, damage, persistent damage, and debug logs.
-- **⌨️ Shortcut** — Opens the builder with `Ctrl + Shift + T`.
+- Open Inline Builder from a supported description editor or press `Ctrl + Shift + T`. It reads compatible text from the description. If no editor is active, it copies the output to the clipboard.
+- Create `@Template` text for burst, cone, square, and line areas.
+- Create `@Damage` text with a damage type and traits.
+- Create `@Check` text with a save type, DC, basic save, and DC visibility.
+- Use NPC level suggestions for DCs and damage.
+- Add conditions, damage, and persistent damage to save outcomes.
 
----
+## Automations
 
-## ⚙️ Settings
+Enable Target Helper and Target Helper Automations in Daavy's Addons settings. Target Helper rolls saves and applies outcome damage to selected targets. Inline Builder adds the conditions and persistent damage configured for each outcome and sends outcome damage to Daavy's Addons to apply.
 
-- **Debug Mode** — Turns on system logs to help with troubleshooting.
+Daavy's Addons applies its damage multipliers to basic saves. Its permissions and NPC-only setting control outcome automation.
 
----
+## Settings
 
-## 🛠️ Compatibility
+| Setting | Effect |
+| --- | --- |
+| Theme | Choose Default or Light for Inline Builder windows. |
 
-- **Foundry VTT**: Version 14.
-- **System**: PF2e 8.1.2+.
-- **Required**: PF2e Toolbelt for target-helper automation.
+GMs can donate, visit Discord, and submit bug reports or suggestions from the module settings.
 
----
+## Installation
 
-## 📚 Credits
+In Foundry VTT, open Add-on Modules, choose Install Module, and enter the manifest URL:
 
-- **[PF2e Toolbelt](https://github.com/reonZ/pf2e-toolbelt)** by ReonZ
+<https://github.com/DaavyC/pf2e-daavy-inlinebuilder/releases/latest/download/module.json>
+
+## Compatibility
+
+- Requires Foundry VTT 14.
+- Requires Pathfinder Second Edition.
+- Requires Daavy's Addons for Target Helper automation.

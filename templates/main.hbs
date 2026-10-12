@@ -23,7 +23,6 @@
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
         <label>{{labels.templateType}}</label>
-        <span>{{labels.areaShape}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{> inlinebuilderIconSegment options=templateTypes buttonClass="template-type-btn"}}
@@ -31,8 +30,7 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>{{labels.distance}}</label>
-        <span>{{labels.rangeInUnits}}</span>
+        <label for="template-distance">{{labels.distance}}</label>
       </div>
       <div class="inlinebuilder-control input-with-controls">
         <input type="number" id="template-distance" name="templateDistance" min="0" step="5" placeholder="ft" value="0">
@@ -52,8 +50,7 @@
   <fieldset class="template-section" data-section="damage" style="display:none;">
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>{{labels.formula}}</label>
-        <span>{{labels.damageExpression}}</span>
+        <label for="damage-formula">{{labels.formula}}</label>
       </div>
       <div class="inlinebuilder-control input-with-suggest">
         <input type="text" id="damage-formula" name="damageFormula" placeholder="{{defaultDamage}}">
@@ -64,8 +61,7 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>{{labels.damageType}}</label>
-        <span>{{labels.selectType}}</span>
+        <label for="damage-type">{{labels.damageType}}</label>
       </div>
       <div class="inlinebuilder-control">
         {{> inlinebuilderDamageTypeSelect}}
@@ -74,7 +70,6 @@
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
         <label>{{labels.traits}}</label>
-        <span>{{labels.characteristics}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{#each traits}}
@@ -90,7 +85,6 @@
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
         <label>{{labels.save}}</label>
-        <span>{{labels.checkType}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{> inlinebuilderIconSegment options=saveTypes buttonClass="save-type-btn"}}
@@ -98,8 +92,7 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>{{labels.dc}}</label>
-        <span>{{labels.difficultyClass}}</span>
+        <label for="dc-value">{{labels.dc}}</label>
       </div>
       <div class="inlinebuilder-control input-with-suggest">
         <input type="number" id="dc-value" name="dcValue" min="1" max="60" placeholder="{{defaultDC}}">
@@ -110,8 +103,7 @@
     </div>
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
-        <label>{{labels.basic}}</label>
-        <span>{{labels.standardSave}}</span>
+        <label for="basic-save">{{labels.basic}}</label>
       </div>
       <div class="inlinebuilder-control inlinebuilder-check-control">
         <input type="checkbox" id="basic-save" name="basicSave" checked>
@@ -123,7 +115,6 @@
     <div class="inlinebuilder-row">
       <div class="inlinebuilder-label">
         <label>{{labels.showAs}}</label>
-        <span>{{labels.chatVisibility}}</span>
       </div>
       <div class="inlinebuilder-control icon-btn-group segmented">
         {{> inlinebuilderIconSegment options=showDCOptions buttonClass="show-dc-btn" activeValue="all"}}
@@ -194,17 +185,19 @@
 <div class="inlinebuilder-content">
   <div class="condition-picker-grid">
     {{#each conditions}}
-    <div class="cond-btn-card {{actionClass}}{{#if isActive}} active{{/if}}" data-cond="{{slug}}" title="{{actionTitle}}">
-      {{#if iconClass}}
-      <i class="cond-icon cond-icon-fa {{iconClass}}"></i>
-      {{else}}
-      <img class="cond-icon" src="{{iconPath}}" alt="{{label}}">
-      {{/if}}
+    <button type="button" class="cond-btn-card {{actionClass}}{{#if isActive}} active{{/if}}" data-cond="{{slug}}" title="{{actionTitle}}">
+      <span class="cond-icon-wrap">
+        {{#if iconClass}}
+        <i class="cond-icon cond-icon-fa {{iconClass}}"></i>
+        {{else}}
+        <img class="cond-icon" src="{{iconPath}}" alt="{{label}}">
+        {{/if}}
+        {{#if isValued}}
+        <span class="cond-value">{{value}}</span>
+        {{/if}}
+      </span>
       <span class="cond-name">{{label}}</span>
-      {{#if isValued}}
-      <input type="number" class="cond-value-input" min="1" max="10" value="{{value}}" data-cond="{{slug}}">
-      {{/if}}
-    </div>
+    </button>
     {{/each}}
   </div>
 </div>
