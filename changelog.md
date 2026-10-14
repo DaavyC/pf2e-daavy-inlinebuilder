@@ -1,3 +1,7 @@
+##### 1.0.3
+
+- Fixed the Inline Builder button appearing in the chat message box.
+
 ##### 1.0.2
 
 - Replaced PF2e Toolbelt with Daavy's Addons for automation.

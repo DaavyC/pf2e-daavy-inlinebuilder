@@ -1258,7 +1258,7 @@ function injectInlineBuilderEditorButton(container) {
 
 function canShowInlineBuilderEditorButton(editor) {
   if (!(editor instanceof HTMLElement)) return false;
-  if (editor.closest('#chat, #chat-form, #chat-controls, #chat-log, #sidebar, .chat-sidebar')) return false;
+  if (editor.closest('#chat-message, #chat-notifications, #chat, #chat-form, #chat-controls, #chat-log, #sidebar, .chat-sidebar')) return false;
   return !!editor.querySelector('.ProseMirror[contenteditable]:not([contenteditable="false"]), [contenteditable]:not([contenteditable="false"])');
 }
 
